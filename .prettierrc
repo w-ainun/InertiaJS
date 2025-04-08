@@ -13,6 +13,13 @@
             "options": {
                 "tabWidth": 2
             }
+        },
+        {
+            "files": "*/.{js,jsx,ts,tsx}",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80
+            }
         }
     ]
 }

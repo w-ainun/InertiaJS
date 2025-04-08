@@ -1,28 +1,24 @@
 <?php
 
+// autoload and namespace in composer
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () { // routes
+Route::get('/', function() { // routes
     return Inertia::render('home'); // file name
 })->name('home'); // name for pages
 
-Route::get('/about', function() {
-    return Inertia::render('about', [
-        'name' => 'JOJO'
-    ]);
-})->name('about');
+Route::get('/menu', function() {
+    return Inertia::render('menu');
+})->name('menu');
 
-Route::get('/blog', function() {
-    return Inertia::render('blog');
-})->name('blog');
+Route::get('/offers', function() {
+    return Inertia::render('offers');
+});
 
-Route::get('/contact', function() {
-    return Inertia::render('contact', [
-        'email' => 'achmadaliridho46@gmail.com',
-        'sosmed' => 'rhindottire'
-    ]);
-})->name('contact');
+Route::get('/order', function() {
+    return Inertia::render('order');
+});
 
 // Route::middleware(['auth', 'verified'])->group(function () {
 //     Route::get('dashboard', function () {
