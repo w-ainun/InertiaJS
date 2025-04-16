@@ -8,22 +8,19 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * php artisan migrate
      */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('username')->unique();
-            $table->string('email')->unique();
-            $table->string("name")->nullable(); // optional colums
-            $table->enum("role", ["ADMIN", "CLIENT"])
-                  ->default("CLIENT"); // default value
-            $table->enum("gender", ["MAN", "WOMAN"])->nullable();
-            $table->date("birthday")->nullable();
-            $table->string("phone")->nullable();
-            $table->string("profile");
+
+            $table->string('username', 25)->unique();
+            $table->string('email', 40)->unique();
+            $table->string('password', 64);
+            $table->enum("role", ["ADMIN", "CLIENT"])->default("CLIENT"); // default value
+
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -46,6 +43,7 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
+     * php artisan migrate:fresh
      */
     public function down(): void
     {

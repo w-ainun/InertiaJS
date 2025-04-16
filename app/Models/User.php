@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -12,15 +13,35 @@ class User extends Authenticatable // singular version from table
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    // override
+    protected $table = 'users'; // default  plural table
+    protected $primaryKey = 'id'; // default primaryKey
+    protected $with = [
+        'transactions',
+        'feedbacks',
+        'contacts',
+    ]; // lazy->eager loading
+
+    public function transactions(): HasMany { // 1:M
+        return $this->hasMany(Transaction::class, 'client_id', 'id');
+    }
+
+    public function feedbacks(): HasMany { // 1:M
+        return $this->hasMany(Feedback::class, 'client_id', 'id');
+    }
+
+    public function contacts(): HasMany{ // 1:M
+        return $this->hasMany(Contact::class, 'client_id', 'id');
+    }
+
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'username', 'email',
+        'password', 'role',
     ];
 
     /**
