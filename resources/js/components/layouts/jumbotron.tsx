@@ -9,35 +9,38 @@ export default function Jumbotron() {
       <TrackingCard
         title="RB Store"
         time="now"
-        messages={["We've Reached your order!", "Awaiting Restaurant acceptance"]}
+        messages={["order cepat dan mudah", "Pesanan langsung diproses"]}
         number={1}
         className="absolute right-30 top-30"
       />
       <TrackingCard
         title="RB Store"
         time="now"
-        messages={["Order Accepted! ✅", "Your order will be delivered shortly"]}
+        messages={["menerima banyak jenis pembayaran ✅", "nikmati kemudahan bertransaksi"]}
         number={2}
         className="absolute right-5 bottom-55"
       />
       <TrackingCard
         title="RB Store"
         time="now"
-        messages={["Your rider nearby 🎉", "They're almost here - get ready!"]}
+        messages={["jasa kirim tanpa bayar ongkir!", "pengiriman bebas menuju alamat anda"]}
         number={3}
         className="absolute right-20 bottom-10"
       />
 
       <div className="ml-10 mt-52">
-        <p>Order Traditional food, takeaway and groceries.</p>
-        <h1 className="font-bold text-6xl">Feast Your Sense,</h1>
-        <h1 className="font-bold text-6xl text-[#51793E]">Fast and Fresh</h1>
-        <p className="mt-10">Enter a postcode to see what we deliver</p>
+        <p>Pesan aneka kue tradisional, kudapan siap saji dan penawaran spesial lainnya!</p>
+        <h1 className="font-bold text-5xl">Cita Rasa Nusantara,</h1>
+        <div className="font-bold text-5xl text-[#51793E]">
+          <p>Tradisi dalam</p>
+          <p>Genggaman</p>
+        </div>
+        <p className="mt-5">Temukan Kelezatan dalam menu kami</p>
         <form action="">
           <div className="relative h-10 w-96 mt-3">
             <input
               type="text"
-              placeholder="e.g. E4CR 3TE"
+              placeholder="e.g. klepon manis"
               className="border font-bold border-gray-500 px-4 py-2 w-full rounded-4xl h-full"
               maxLength={25}
             />

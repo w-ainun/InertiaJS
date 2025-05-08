@@ -25,8 +25,9 @@ export default function FooterLayout({ ...props }) {
       <main className="grid grid-cols-[2fr_2fr_1fr_1fr] py-20 px-20 pb-10 gap-10 bg-[#D9D9D9]">
 
         <section className="flex flex-col max-w-sm">
-          <FigureCap src="/svg/order-2.svg" alt="Order logo" />
-          <FigureCap src="/img/googleApp.png" alt="Download on app stores" />
+          {/* <FigureCap src="/svg/order-2.svg" alt="Order logo" />
+          <FigureCap src="/img/googleApp.png" alt="Download on app stores" /> */}
+          <FigureCap src="/RB-Store.png" alt="RB Store" />
           <p className="mt-2">Company # 490039-445, Registered with House of companies.</p>
         </section>
 

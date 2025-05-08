@@ -8,7 +8,7 @@ export default function HeaderLayout({ ...props }) {
       </p>
       <div className="flex gap-2">
         <MapPin />
-        <p>Jl. Telang Indah Barat, Bangkalan</p>
+        <p><strong>Jl. Telang Indah Barat, Bangkalan</strong></p>
         <Link href="#" className="text-[#51793E] font-bold underline">
           Change Location
         </Link>
@@ -18,7 +18,7 @@ export default function HeaderLayout({ ...props }) {
         <div className="h-full w-[1px] bg-[#F0F0FF]"></div>
         <div className="p-4">23 Items</div>
         <div className="h-full w-[1px] bg-[#F0F0FF]"></div>
-        <div className="p-4">GBP 79.89</div>
+        <div className="p-4">RP 100.000</div>
         <div className="h-full w-[1px] bg-[#F0F0FF]"></div>
         <img src="/svg/download.svg" alt="download" className="h-14 w-20 p-2" />
       </div>

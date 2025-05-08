@@ -13,11 +13,15 @@ export default function TrackingCard({ title, time, messages, number, className 
     <div className={cn("absolute bg-white rounded-2xl p-4 w-96", className)}>
       <div className="relative">
         <div className="flex justify-between">
-          <h1 className="text-[#51793E] font-bold text-xl">{ title }</h1>
-          <p>{time}</p>
+          <h1 className="text-[#51793E] font-bold text-xl">
+            <strong>{ title }</strong>
+          </h1>
+          <p>{ time }</p>
         </div>
         {messages.map(( msg, index ) => (
-          <p key={ index }>{ msg }</p>
+          <p key={ index } className={index === 0 ? 'font-bold' : ''}>
+            { msg }
+          </p>
         ))}
         <div className="outline-text absolute right-1 -top-20 text-7xl font-bold">{ number }</div>
       </div>

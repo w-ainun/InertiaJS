@@ -95,7 +95,7 @@ const HeroLayout = ({ ...props }) => {
         </div>
       </div>
 
-      <div id="us" className="mt-10">
+      {/* <div id="FAQ" className="mt-10">
         <h1 className="text-3xl font-bold">Why Choose Us?</h1>
         <div className="mt-6 flex gap-3">
             <div className="card rounded-2xl bg-[#51793E]">
@@ -135,7 +135,7 @@ const HeroLayout = ({ ...props }) => {
               </div>
             </div>
           </div>
-      </div>
+      </div> */}
     </main>
   );
 };

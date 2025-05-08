@@ -5,7 +5,7 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Browser Menu", href: "/menu" },
   { label: "Special Offers", href: "/offers" },
-  { label: "Track Order", href: "/order" },
+  // { label: "Track Order", href: "/order" },
 ];
 
 export default function NavbarTemplate() {
