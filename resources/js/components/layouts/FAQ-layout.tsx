@@ -1,9 +1,9 @@
 import { Link } from '@inertiajs/react';
 
-const AboutLayout = ({ ...props }) => {
+export default function AboutLayout() {
   return (
     <>
-      <section aria-label="about us" { ...props }>
+      <section aria-label="about us" className="mx-16 mt-20 h-screen rounded-2xl bg-neutral-200 p-24">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Know more about us!</h1>
           <div className="flex items-center gap-2">
@@ -62,23 +62,21 @@ const AboutLayout = ({ ...props }) => {
         </div>
       </section>
 
-    <section aria-label="store statistics" className="mx-16">
-      <div className="mt-10 flex h-32 justify-around rounded-2xl bg-[#51793E]">
-        <div className="py-6 text-center font-bold text-white">
-          <h1 className="text-5xl">789,900+</h1>
-          <p>Orders Delivered</p>
-        </div>
+      <section aria-label="store statistics" className="mx-16">
+        <div className="mt-10 flex h-32 justify-around rounded-2xl bg-[#51793E]">
+          <div className="py-6 text-center font-bold text-white">
+            <h1 className="text-5xl">789,900+</h1>
+            <p>Orders Delivered</p>
+          </div>
 
-        <div className="h-full w-[1px] bg-white"></div>
+          <div className="h-full w-[1px] bg-white"></div>
 
-        <div className="py-6 text-center font-bold text-white">
-          <h1 className="text-5xl">17,457+</h1>
-          <p>Food items</p>
+          <div className="py-6 text-center font-bold text-white">
+            <h1 className="text-5xl">17,457+</h1>
+            <p>Food items</p>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 };
-
-export default AboutLayout;

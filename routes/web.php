@@ -1,26 +1,19 @@
 <?php
 
-// autoload and namespace in composer
-
-use App\Http\Controllers\AddressController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\FeedbackController;
-use App\Http\Controllers\ItemController;
-use App\Http\Controllers\RatingController;
-use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\TransactionDetailController;
-use App\Http\Controllers\UserController;
-use App\Models\Category;
-use App\Models\Feedback;
-use App\Models\Item;
-use App\Models\Rating;
-use App\Models\Transaction;
+use App\Http\Controllers\Admin\AdminAddressController;
+use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminContactController;
+use App\Http\Controllers\Admin\AdminFeedbackController;
+use App\Http\Controllers\Admin\AdminItemController;
+use App\Http\Controllers\Admin\AdminRatingController;
+use App\Http\Controllers\Admin\AdminTransactionController;
+use App\Http\Controllers\Admin\AdminTransactionDetailController;
+use App\Http\Controllers\Admin\AdminUserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function() { // routes
-    return Inertia::render('home'); // file name
+    return Inertia::render('welcome'); // file name
 })->name('home'); // name for pages
 
 Route::get('/menu', function() {
@@ -35,15 +28,15 @@ Route::get('/order', function() {
     return Inertia::render('order');
 });
 
-Route::resource('users', UserController::class);
-Route::resource('contacts', ContactController::class);
-Route::resource('address', AddressController::class);
-Route::resource('feedbacks', FeedbackController::class);
-Route::resource('transactions', TransactionController::class);
-Route::resource('categories', CategoryController::class);
-Route::resource('items', ItemController::class);
-Route::resource('ratings', RatingController::class);
-Route::resource('details', TransactionDetailController::class);
+Route::resource('users', AdminUserController::class);
+Route::resource('contacts', AdminContactController::class);
+Route::resource('address', AdminAddressController::class);
+Route::resource('feedbacks', AdminFeedbackController::class);
+Route::resource('transactions', AdminTransactionController::class);
+Route::resource('categories', AdminCategoryController::class);
+Route::resource('items', AdminItemController::class);
+Route::resource('ratings', AdminRatingController::class);
+Route::resource('details', AdminTransactionDetailController::class);
 
 // Route::middleware(['auth', 'verified'])->group(function () {
 //     Route::get('dashboard', function () {
@@ -52,4 +45,4 @@ Route::resource('details', TransactionDetailController::class);
 // });
 
 // require __DIR__.'/settings.php';
-// require __DIR__.'/auth.php';
+require __DIR__.'/auth.php';

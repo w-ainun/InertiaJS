@@ -10,8 +10,8 @@ export default function NavbarLayout({ ...props }) {
         <NavbarTemplate />
         <div className="flex bg-black text-white rounded-4xl px-6 py-3">
           <img src="/svg/male.svg" alt="user" className="pr-2" />
-          <Link href="/login">Login</Link>/
-          <Link href="/register">Register</Link>
+          <Link href={route('login')}>Login</Link>/
+          <Link href={route('register')}>Register</Link>
         </div>
       </div>
     </section>

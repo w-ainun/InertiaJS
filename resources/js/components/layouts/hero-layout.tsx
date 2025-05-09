@@ -1,8 +1,8 @@
 import { Link } from "@inertiajs/react";
 
-const HeroLayout = ({ ...props }) => {
+export default function HeroLayout() {
   return (
-    <main { ... props }>
+    <main className="mx-16">
       <div id="hero-section">
         <div id="nav" className="mt-10 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Up to -40%🎊RB Store exclusive deals</h1>
@@ -139,5 +139,3 @@ const HeroLayout = ({ ...props }) => {
     </main>
   );
 };
-
-export default HeroLayout;
