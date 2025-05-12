@@ -1,6 +1,6 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
+import { LoaderCircle } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 
 import Input from '@/components/elements/input';
 import Label from '@/components/elements/label';
@@ -23,7 +23,8 @@ interface LoginProps {
 };
 
 export default function Login({ status, canResetPassword }: LoginProps) {
-  const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
+  const { data, setData, post, processing, errors, reset } =
+  useForm<Required<LoginForm>>({
     email: '',
     username: '',
     password: '',

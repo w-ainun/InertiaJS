@@ -18,7 +18,10 @@ return new class extends Migration
             $table->string('username', 25)->unique();
             $table->string('email', 40)->unique();
             $table->string('password', 64);
-            $table->enum("role", ["ADMIN", "CLIENT"])->default("CLIENT"); // default value
+            $table->string('avatar')->nullable();
+            $table->enum('role', ['ADMIN', 'CLIENT', 'COURIER'])->default('CLIENT'); // default value
+            $table->enum('status', ['active', 'inactive']);
+            $table->softDeletes(); // adds deleted_at TIMESTAMP nullable
 
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();

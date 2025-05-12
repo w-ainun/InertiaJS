@@ -30,9 +30,9 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
+        // route after login logic for admin, client, and kurir
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

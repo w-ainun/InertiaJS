@@ -1,6 +1,6 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
+import { LoaderCircle } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 
 import Input from '@/components/elements/input';
 import Label from '@/components/elements/label';
@@ -17,7 +17,8 @@ type RegisterForm = {
 };
 
 export default function Register() {
-  const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
+  const { data, setData, post, processing, errors, reset } =
+  useForm<Required<RegisterForm>>({
     email: '',
     username: '',
     password: '',
@@ -28,6 +29,7 @@ export default function Register() {
     e.preventDefault();
     post(route('register'), {
       onFinish: () => reset('password', 'password_confirmation'),
+      onError: (e) => console.log(e)
     });
   };
 

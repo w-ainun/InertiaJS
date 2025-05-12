@@ -12,12 +12,10 @@ return new class extends Migration {
             $table->foreignId('transaction_id')->constrained(
                 table: 'transactions',
                 column: 'id',
-                indexName: 'transactions_index'
             );
             $table->foreignId('item_id')->constrained(
                 table: 'items',
                 column: 'id',
-                indexName: 'items_index'
             );
             $table->integer('quantity');
             $table->decimal('price_at_time', 10, 2);

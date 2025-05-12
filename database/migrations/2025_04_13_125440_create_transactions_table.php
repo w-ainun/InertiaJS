@@ -12,7 +12,6 @@ return new class extends Migration {
             $table->foreignId('client_id')->constrained(
                 table: 'users',
                 column: 'id',
-                indexName: 'users_index'
             );
             $table->integer('total');
             $table->text('note')->nullable();

@@ -22,4 +22,4 @@ function HeadingSmall({
   );
 };
 
-export { Heading, HeadingSmall }
+export { Heading, HeadingSmall };

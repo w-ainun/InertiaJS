@@ -1,6 +1,6 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
+import { LoaderCircle } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 
 import Input from '@/components/elements/input';
 import Label from '@/components/elements/label';
@@ -9,7 +9,8 @@ import InputError from '@/components/elements/input-error';
 import AuthTemplate from '@/components/templates/auth-template';
 
 export default function ConfirmPassword() {
-  const { data, setData, post, processing, errors, reset } = useForm<Required<{ password: string }>>({
+  const { data, setData, post, processing, errors, reset } =
+  useForm<Required<{ password: string }>>({
     password: '',
   });
 

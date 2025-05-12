@@ -12,11 +12,9 @@ return new class extends Migration {
             $table->foreignId("client_id")->constrained(
                 table: "users",
                 column: "id",
-                indexName: "users_index"
             );
             $table->string("name", 100)->nullable(false);
             $table->string("phone", 20)->nullable(false);
-            $table->string("profile")->nullable(false);
             $table->enum("gender", ["MAN", "WOMAN"])->nullable(false);
             $table->date("birthday")->nullable(false);
             $table->json('favourite')->nullable(true);

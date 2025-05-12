@@ -1,9 +1,9 @@
 import { type BreadcrumbItem } from '@/types';
 import type { PropsWithChildren } from 'react';
 
-import { AppHeader } from '@/components/layouts/app/app-header';
-import AppContent from '@/components/layouts/app/app-content';
-import { AppShell } from '@/components/layouts/app/app-shell';
+import AppContent from './app-content';
+import { AppHeader } from './app-header';
+import { AppShell } from './app-shell';
 
 export default function AppHeaderLayout({
   children,

@@ -6,10 +6,11 @@ use App\Models\Category;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
+use Inertia\Inertia;
 
 class AdminCategoryController extends Controller {
     public function index() {
-        //
+        return Inertia::render('admins/categories/index');
     }
 
     public function create() {

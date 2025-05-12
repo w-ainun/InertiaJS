@@ -4,7 +4,7 @@ interface PlaceholderPatternProps {
   className?: string;
 }
 
-export function PlaceholderPattern({ className }: PlaceholderPatternProps) {
+export default function PlaceholderPattern({ className }: PlaceholderPatternProps) {
   const patternId = useId();
 
   return (

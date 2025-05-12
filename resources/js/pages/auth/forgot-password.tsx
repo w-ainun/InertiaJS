@@ -1,6 +1,6 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
+import { LoaderCircle } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 
 import Input from '@/components/elements/input';
 import Label from '@/components/elements/label';
@@ -10,7 +10,8 @@ import InputError from '@/components/elements/input-error';
 import AuthTemplate from '@/components/templates/auth-template';
 
 export default function ForgotPassword({ status }: { status?: string }) {
-  const { data, setData, post, processing, errors } = useForm<Required<{ email: string }>>({
+  const { data, setData, post, processing, errors } =
+  useForm<Required<{ email: string }>>({
     email: '',
   });
 

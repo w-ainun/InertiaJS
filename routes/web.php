@@ -12,37 +12,50 @@ use App\Http\Controllers\Admin\AdminUserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function() { // routes
+Route::get('/', function () { // routes
     return Inertia::render('welcome'); // file name
-})->name('home'); // name for pages
+})->name('landing_page'); // name for pages
 
-Route::get('/menu', function() {
+Route::get('/menu', function () {
     return Inertia::render('menu');
 })->name('menu');
 
-Route::get('/offers', function() {
+Route::get('/offers', function () {
     return Inertia::render('offers');
 });
 
-Route::get('/order', function() {
+Route::get('/order', function () {
     return Inertia::render('order');
 });
 
-Route::resource('users', AdminUserController::class);
-Route::resource('contacts', AdminContactController::class);
-Route::resource('address', AdminAddressController::class);
-Route::resource('feedbacks', AdminFeedbackController::class);
-Route::resource('transactions', AdminTransactionController::class);
-Route::resource('categories', AdminCategoryController::class);
-Route::resource('items', AdminItemController::class);
-Route::resource('ratings', AdminRatingController::class);
-Route::resource('details', AdminTransactionDetailController::class);
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('admin')->group(function () {
+        Route::get('/', function () {
+            return Inertia::render('admins/dashboard');
+        })->name('dashboard');
+        Route::resource('users', AdminUserController::class);
+        Route::resource('contacts', AdminContactController::class);
+        Route::resource('address', AdminAddressController::class);
+        // Route::resource('feedbacks', AdminFeedbackController::class);
+        Route::resource('transactions', AdminTransactionController::class);
+        Route::resource('categories', AdminCategoryController::class);
+        Route::resource('items', AdminItemController::class);
+        Route::resource('ratings', AdminRatingController::class);
+        Route::resource('details', AdminTransactionDetailController::class);
+    });
 
-// Route::middleware(['auth', 'verified'])->group(function () {
-//     Route::get('dashboard', function () {
-//         return Inertia::render('dashboard');
-//     })->name('dashboard');
-// });
+    Route::prefix('user')->group(function () {
+        Route::get('/', function () {
+            return Inertia::render('clients/welcome');
+        })->name('home');
+    });
 
-// require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+    Route::prefix('kurir')->group(function () {
+        Route::get('/', function () {
+            echo "Ini halaman kurir ya cantik!";
+        });
+    });
+});
+
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

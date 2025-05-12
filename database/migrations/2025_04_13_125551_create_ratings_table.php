@@ -12,7 +12,6 @@ return new class extends Migration {
             $table->foreignId('item_id')->constrained(
                 table: 'items',
                 column: 'id',
-                indexName: 'items_index'
             );
             $table->tinyInteger('score');
             $table->string('comment')->nullable();

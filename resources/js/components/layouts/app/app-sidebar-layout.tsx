@@ -15,7 +15,7 @@ export default function AppSidebarLayout({
       <AppSidebar />
       <AppContent variant="sidebar">
         <AppSidebarHeader breadcrumbs={breadcrumbs} />
-        {children}
+        { children }
       </AppContent>
     </AppShell>
   );

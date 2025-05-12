@@ -12,7 +12,6 @@ return new class extends Migration {
             $table->foreignId('category_id')->constrained(
                 table: 'categories',
                 column: 'id',
-                indexName: 'categories_index'
             )->nullable();
             $table->string('name', 100);
             $table->string('unit', 20)->default('pcs'); // E.g., 'pcs', 'pack', 'kg'

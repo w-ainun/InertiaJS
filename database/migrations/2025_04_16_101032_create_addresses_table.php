@@ -12,7 +12,6 @@ return new class extends Migration {
             $table->foreignId("contact_id")->constrained(
                 table: "contacts",
                 column: "id",
-                indexName: "contacts_index"
             );
             $table->string("post_code", 10);
             $table->string("country", 100);
