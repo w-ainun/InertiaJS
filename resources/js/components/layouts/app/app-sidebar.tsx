@@ -1,6 +1,6 @@
 import { NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BadgeDollarSign, BookOpen, BookUser, Box, ChartBarStacked, Contact, Folder, LayoutGrid, MessageSquareText, Server, Users } from 'lucide-react';
+import { BadgeDollarSign, BookOpen, Box, ChartBarStacked, Folder, LayoutGrid, MessageSquareText, Server, Users } from 'lucide-react';
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import NavFooter from '../navigation/nav-footer';
@@ -18,18 +18,18 @@ const mainNavItems: NavItem[] = [
     title: 'Users',
     href: route('users.index'),
     icon: Users,
-    items: [
-      {
-        title: "Contacts",
-        href: route('contacts.index'),
-        icon: Contact,
-      },
-      {
-        title: "Address",
-        href: route('address.index'),
-        icon: BookUser,
-      },
-    ]
+    // items: [
+    //   {
+    //     title: "Contacts",
+    //     href: route('contacts.index'),
+    //     icon: Contact,
+    //   },
+    //   {
+    //     title: "Address",
+    //     href: route('address.index'),
+    //     icon: BookUser,
+    //   },
+    // ]
   },
   {
     title: 'Categories',
