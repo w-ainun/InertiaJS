@@ -1,7 +1,7 @@
 import type React from 'react';
 
 import type { BreadcrumbItem, SharedData, User } from '@/types';
-import { useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import { ChevronLeft, Eye, EyeOff, LoaderCircle, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,6 +28,7 @@ export default function UsersEdit() {
     status: user.data.status,
     isDelete: user.data.deleted_at,
   });
+  console.log(`User ID: ${user.data.id}`);
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -70,7 +71,7 @@ export default function UsersEdit() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <div className="container p-2">
+      <div className="container py-6 px-2">
         <div className="bg-background rounded-md border shadow-sm">
           <div className="border-b px-6 py-4">
             <h1 className="text-xl font-semibold">Edit User</h1>
@@ -192,7 +193,12 @@ export default function UsersEdit() {
             <Separator />
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => window.history.back()} className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.visit(route('users.index'))}
+                className="flex items-center gap-1"
+              >
                 <ChevronLeft className="h-4 w-4" />
                 Back to Users
               </Button>

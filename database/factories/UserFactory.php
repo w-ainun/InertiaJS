@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Transaction;
+
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -44,10 +44,37 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function is_admin(): static
+    public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => "ADMIN",
+            'role' => 'ADMIN',
+        ]);
+    }
+
+    public  function courier(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'COURIER'
+        ]);
+    }
+
+    public function client(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'CLIENT'
+        ]);
+    }
+
+    public function edho(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'username' => "ACHMAD RIDHO FA'IZ",
+            'email' => '230411100197@student.trunojoyo.ac.id',
+            'password' => Hash::make('admin123'),
+            'avatar' => null,
+            'status' => 'active',
+            'email_verified_at' => now(),
+            'remember_token' => Str::random(10),
         ]);
     }
 }

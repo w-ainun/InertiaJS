@@ -21,10 +21,11 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import Input from '../elements/input';
-import { Button } from '../elements/button';
 import { DataTableViewOptions } from './data-table-view-option';
 import { DataTablePagination } from './data-table-pagination';
+
+import Input from '@/components/elements/input';
+import { Button } from '@/components/elements/button';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]; // header columns of table

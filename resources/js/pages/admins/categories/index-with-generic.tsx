@@ -8,9 +8,8 @@ import type { BreadcrumbItem, SharedData } from "@/types"
 import { columns } from "./columns"
 import { DataTable } from "@/components/ui/data-table"
 import AppLayout from "@/components/layouts/app-layout"
-import { CategorySkeleton } from "@/components/fragments/category-skeleton"
+import { DataTableSkeleton } from "@/components/fragments/data-table-skeleton"
 
-// Define the Category type (add this to your types/index.d.ts if not already there)
 interface Category {
   id: number
   name: string
@@ -51,7 +50,7 @@ export default function Categories() {
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
           {isLoading || !categories ? (
-            <CategorySkeleton />
+            <DataTableSkeleton columnCount={4} rowCount={8} searchable={true} filterable={true} />
           ) : (
             <DataTable<Category, string> columns={columns} data={categories.data} searchKey="name" create="category" />
           )}

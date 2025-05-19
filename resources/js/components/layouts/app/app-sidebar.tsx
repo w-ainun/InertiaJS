@@ -1,6 +1,19 @@
 import { NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BadgeDollarSign, BookOpen, Box, ChartBarStacked, Folder, LayoutGrid, MessageSquareText, Server, Users } from 'lucide-react';
+import {
+  BadgeDollarSign,
+  BookOpen,
+  BookUser,
+  Box,
+  ChartBarStacked,
+  CircleUser,
+  Contact,
+  Folder,
+  LayoutGrid,
+  MessageSquareText,
+  Server,
+  Users,
+} from 'lucide-react';
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import NavFooter from '../navigation/nav-footer';
@@ -15,21 +28,25 @@ const mainNavItems: NavItem[] = [
     icon: LayoutGrid,
   },
   {
-    title: 'Users',
-    href: route('users.index'),
-    icon: Users,
-    // items: [
-    //   {
-    //     title: "Contacts",
-    //     href: route('contacts.index'),
-    //     icon: Contact,
-    //   },
-    //   {
-    //     title: "Address",
-    //     href: route('address.index'),
-    //     icon: BookUser,
-    //   },
-    // ]
+    title: 'Brainware',
+    icon: CircleUser,
+    items: [
+      {
+        title: 'Users',
+        href: route('users.index'),
+        icon: Users,
+      },
+      {
+        title: 'Contacts',
+        href: route('contacts.index'),
+        icon: Contact,
+      },
+      {
+        title: 'Address',
+        href: route('address.index'),
+        icon: BookUser,
+      },
+    ],
   },
   {
     title: 'Categories',
@@ -96,4 +113,4 @@ export default function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-};
+}

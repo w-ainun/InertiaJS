@@ -33,7 +33,7 @@ class User extends Authenticatable // singular version from table
     // }
 
     public function contacts(): HasMany{ // 1:M
-        return $this->hasMany(Contact::class, 'client_id', 'id');
+        return $this->hasMany(Contact::class, 'user_id', 'id');
     }
 
     /**
@@ -44,6 +44,8 @@ class User extends Authenticatable // singular version from table
     protected $fillable = [
         'username', 'email',
         'password', 'role',
+        'status', 'avatar',
+        'email_verified_at'
     ];
 
     /**

@@ -44,7 +44,7 @@ export default function UsersCreate() {
       href: route("users.index"),
     },
     {
-      title: "Create New User",
+      title: "Create",
       href: route("users.create"),
     },
   ]
@@ -83,14 +83,7 @@ export default function UsersCreate() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <div className="container py-6">
-        <div className="mb-6 flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={() => window.history.back()} className="flex items-center gap-1">
-            <ChevronLeft className="h-4 w-4" />
-            Back to Users
-          </Button>
-        </div>
-
+      <div className="container py-6 px-2">
         <div className="bg-background border rounded-md shadow-sm">
           <div className="px-6 py-4 border-b flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-muted-foreground" />
@@ -235,7 +228,6 @@ export default function UsersCreate() {
                         <SelectLabel>Status</SelectLabel>
                         <SelectItem value="ACTIVE">Active</SelectItem>
                         <SelectItem value="INACTIVE">Inactive</SelectItem>
-                        <SelectItem value="SUSPENDED">Suspended</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -267,5 +259,5 @@ export default function UsersCreate() {
         </div>
       </div>
     </AppLayout>
-  )
-}
+  );
+};
