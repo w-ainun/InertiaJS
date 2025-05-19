@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () { // routes
     return Inertia::render('welcome'); // file name
-})->name('landing_page'); // name for pages
+})->name('landing page'); // name for pages
 
 Route::get('/menu', function () {
     return Inertia::render('menu');
@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 });
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

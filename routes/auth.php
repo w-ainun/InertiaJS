@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\CompleteProfileController;
+use App\Http\Controllers\Auth\AddAddressController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -35,6 +37,11 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Profile completion routes
+    Route::get('complete-profile', [CompleteProfileController::class, 'create'])
+        ->name('profile.complete');
+    Route::post('complete-profile', [CompleteProfileController::class, 'store']);
+
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 

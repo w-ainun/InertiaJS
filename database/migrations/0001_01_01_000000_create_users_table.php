@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('email', 40)->unique();
             $table->string('password', 64);
             $table->enum('role', ['ADMIN', 'CLIENT', 'COURIER'])->default('CLIENT'); // default value
-            $table->enum('status', ['active', 'inactive'])->default('inactive');
+
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->string('avatar')->nullable();
 
             $table->timestamp('email_verified_at')->nullable();
