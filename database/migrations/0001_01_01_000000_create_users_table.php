@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('password', 64);
             $table->string('avatar')->nullable();
             $table->enum('role', ['ADMIN', 'CLIENT', 'COURIER'])->default('CLIENT'); // default value
-            $table->enum('status', ['active', 'inactive']);
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->softDeletes(); // adds deleted_at TIMESTAMP nullable
 
             $table->timestamp('email_verified_at')->nullable();

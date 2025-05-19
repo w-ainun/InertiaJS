@@ -1,26 +1,27 @@
-import { FormEventHandler } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
+import { LoaderCircle, Eye, EyeOff } from 'lucide-react';
 import { Head, useForm } from '@inertiajs/react';
 
 import Input from '@/components/elements/input';
 import Label from '@/components/elements/label';
 import { Button } from '@/components/elements/button';
-import TextLink from '@/components/elements/text-link';
 import InputError from '@/components/elements/input-error';
-import AuthTemplate from '@/components/templates/auth-template';
 
 type RegisterForm = {
-  email: string;
   username: string;
+  email: string;
   password: string;
   password_confirmation: string;
 };
 
 export default function Register() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const { data, setData, post, processing, errors, reset } =
   useForm<Required<RegisterForm>>({
-    email: '',
     username: '',
+    email: '',
     password: '',
     password_confirmation: '',
   });
@@ -34,90 +35,185 @@ export default function Register() {
   };
 
   return (
-    <AuthTemplate
-      title="Create an account"
-      description="Enter your details below to create your account"
-    >
-      <Head title="Sign Up" />
-      <form className="flex flex-col gap-6" onSubmit={submit}>
-        <div className="grid gap-6">
-
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email address</Label>
-            <Input id="email"
-              type="email"
-              placeholder="email@example.com"
-              autoFocus
-              required
-              tabIndex={1}
-              value={data.email}
-              onChange={(e) => setData('email', e.target.value)}
-              disabled={processing}
-              autoComplete="email"
-            />
-            <InputError message={errors.email} />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="username">Username</Label>
-            <Input id="username"
-              type="text"
-              placeholder="Username"
-              required
-              tabIndex={2}
-              value={data.username}
-              onChange={(e) => setData('username', e.target.value)}
-              disabled={processing}
-              autoComplete="username"
-            />
-            <InputError message={errors.username} className="mt-2" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password"
-                type="password"
-                placeholder="Password"
-                required
-                tabIndex={3}
-                disabled={processing}
-                value={data.password}
-                onChange={(e) => setData('password', e.target.value)}
-                autoComplete="new-password"
-              />
-              <InputError message={errors.password} />
+    <div className="min-h-screen bg-white p-4 flex flex-col">
+         <div className="mt-4 flex justify-center md:justify-start">
+                  {/* Use relative path to the image or import it */}
+                  <img 
+                    src="RB-Store1.png" 
+                    alt="Klepon - Traditional Indonesian dessert" 
+                    className="rounded-lg w-25 h-auto mb-6"
+                  />
+                </div>
+          {/* Main content with border */}
+          <div className="flex-grow flex flex-col md:flex-row border border-gray-200 rounded-t-7xl overflow-hidden">
+    
+    
+            {/* Left side with traditional food image and text */}
+            <div className="bg-white md:w-2/3 flex flex-col p-8 justify-center">
+              <div className="w-full px-2 md:px-12">
+                {/* Headline Atas */}
+                <p className="text-[#51793E] text-sm md:text-1xl font-semibold mb-1 md:mb-4 leading-relaxed">
+                  Pesan aneka kue tradisional, kudapan siap saji dan penawaran spesial lainya!
+                </p>
+                
+                 {/* Judul utama */}
+                  <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-1 leading-tight">
+                    Cita Rasa Nusantara,
+                  </h2>
+                
+                <h3 className="text-[#51793E] text-3xl md:text-5xl font-bold leading-tight">
+                    Tradisi dalam <br></br> Genggaman
+                  </h3>
+                
+               <div className="relative -mt-25 md:-mt-35 flex justify-center md:justify-end md:-mr-4 z-20">
+                <img 
+                  src="/img/klepon.png" 
+                  alt="Klepon - Traditional Indonesian dessert" 
+                  className="rounded-lg max-w-[550px] md:max-w-[620px] h-auto drop-shadow-2xl"
+                />
+              </div>
+    
+    
+    
+    
+              </div>
             </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="password_confirmation">Confirm password</Label>
-              <Input id="password_confirmation"
-                type="password"
-                placeholder="Confirm password"
-                required
-                tabIndex={4}
-                disabled={processing}
-                value={data.password_confirmation}
-                onChange={(e) => setData('password_confirmation', e.target.value)}
-                autoComplete="new-password"
-              />
-              <InputError message={errors.password_confirmation} />
-            </div>
-          </div>
-
-          <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
-              {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-              Create account
-          </Button>
-        </div>
-
-        <div className="text-muted-foreground text-center text-sm">
-            Already have an account?{' '}
-            <TextLink href={route('login')} tabIndex={6}>
-                Log in
-            </TextLink>
-        </div>
-      </form>
-    </AuthTemplate>
-  );
-};
+            
+            {/* Right side with login form */}
+            <div className="bg-[#51793E] md:w-1/2 flex items-center justify-center p-6 relative overflow-hidden rounded-l-[100px]">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <Head title="Sign In" />
+                
+                 <div className="mb-6">
+                              <h2 className="text-3xl font-bold text-gray-900 mb-6">Sign up</h2>
+                            </div>
+                
+                            <form className="flex flex-col gap-4" onSubmit={submit}>
+                
+                                <div>
+                                   <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Username
+                                   </label>
+                                   <Input id="username"
+                                    type="text"
+                                    className="w-full bg-green-50 border-green-100 focus:border-[#51793E] focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                                    placeholder="Username"
+                                    required
+                                    tabIndex={2}
+                                    value={data.username}
+                                    onChange={(e) => setData('username', e.target.value)}
+                                    disabled={processing}
+                                    autoComplete="username"
+                                  />
+                                  <InputError message={errors.username} className="mt-2" />                                 
+                              </div>
+                              
+                              <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Email
+                                </label>
+                                <Input
+                                  id="email"
+                                  type="email"
+                                  placeholder="seinalarf@gmail.com"
+                                  className="w-full bg-green-50 border-green-100 focus:border-[#51793E] focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                                  required
+                                  value={data.email}
+                                  onChange={(e) => setData('email', e.target.value)}
+                                  autoComplete="email"
+                                />
+                                <InputError message={errors.email} />
+                              </div>
+                
+                              <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Password
+                                </label>
+                                <div className="relative">
+                                  <Input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••••••"
+                                    className="w-full bg-green-50 border-green-100 focus:border-[#51793E] focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                                    required
+                                    value={data.password}
+                                    onChange={(e) => setData('password', e.target.value)}
+                                    autoComplete="new-password"
+                                  />
+                                  <button 
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                  >
+                                    {showPassword ? (
+                                      <EyeOff className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                      <Eye className="h-5 w-5 text-gray-400" />
+                                    )}
+                                  </button>
+                                </div>
+                                <InputError message={errors.password} />
+                              </div>
+                
+                              <div>
+                                <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Konfirmasi Password
+                                </label>
+                                <div className="relative">
+                                  <Input
+                                    id="password_confirmation"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    placeholder="••••••••••••"
+                                    className="w-full bg-green-50 border-green-100 focus:border-[#51793E] focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                                    required
+                                    value={data.password_confirmation}
+                                    onChange={(e) => setData('password_confirmation', e.target.value)}
+                                    autoComplete="new-password"
+                                  />
+                                  <button 
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                  >
+                                    {showConfirmPassword ? (
+                                      <EyeOff className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                      <Eye className="h-5 w-5 text-gray-400" />
+                                    )}
+                                  </button>
+                                </div>
+                                <InputError message={errors.password_confirmation} />
+                              </div>
+                
+                              <div className="flex justify-center mt-2">
+                                <Button 
+                                  type="submit" 
+                                  className="bg-[#51793E] hover:bg-[#3f5d31] text-white flex items-center justify-center py-2 px-6 rounded-md"
+                                  disabled={processing}
+                                >
+                                  {processing ? (
+                                    <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
+                                  ) : (
+                                    <>
+                                      SIGN UP
+                                      <svg className="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                      </svg>
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                
+                              <div className="text-center text-gray-500 text-sm mt-4">
+                                I already have an account?{' '}
+                                <a href={route('login')} className="text-[#51793E] hover:underline font-medium">
+                                  Sign in
+                                </a>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
