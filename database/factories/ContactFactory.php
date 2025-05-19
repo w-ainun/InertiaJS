@@ -8,9 +8,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ContactFactory extends Factory {
     public function definition(): array {
         return [
-            'client_id' => User::factory()->state([
-                'role' => 'client'
-            ]),
             'name' => $this->faker->name(),
             'phone' => $this->faker->phoneNumber(),
             'profile' => $this->faker->imageUrl(200, 200, 'people'),

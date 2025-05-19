@@ -50,7 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('home');
     });
 
-    Route::prefix('kurir')->group(function () {
+    Route::prefix('courier')->group(function () {
         Route::get('/', function () {
             echo "Ini halaman kurir ya cantik!";
         });

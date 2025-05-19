@@ -9,17 +9,20 @@ return new class extends Migration {
         Schema::create('contacts', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId("client_id")->constrained(
+            $table->foreignId("user_id")->constrained(
                 table: "users",
                 column: "id",
             );
+
             $table->string("name", 100)->nullable(false);
             $table->string("phone", 20)->nullable(false);
+            $table->string("profile")->nullable(true);
             $table->enum("gender", ["MAN", "WOMAN"])->nullable(false);
             $table->date("birthday")->nullable(false);
             $table->json('favourite')->nullable(true);
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

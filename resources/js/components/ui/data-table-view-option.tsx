@@ -1,7 +1,7 @@
 import { Table } from '@tanstack/react-table';
 import { Settings2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './dropdown-menu';
-import { Button } from '../elements/button';
+import { Button } from '@/components/elements/button';
 
 
 

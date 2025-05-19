@@ -13,7 +13,7 @@ class Contact extends Model {
     protected $with = ['user', 'addresses'];
 
     public function user(): BelongsTo { // M:1
-        return $this->belongsTo(User::class, "client_id", "id");
+        return $this->belongsTo(User::class, "user_id", "id");
     }
 
     public function addresses(): HasMany { // 1:M
@@ -21,7 +21,7 @@ class Contact extends Model {
     }
 
     protected $fillable = [
-        'client_id',
+        'user_id',
         'name', 'gender', 'phone',
         'profile', 'birthday', 'favourite',
     ];

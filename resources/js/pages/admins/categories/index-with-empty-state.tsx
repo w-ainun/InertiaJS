@@ -2,15 +2,16 @@
 
 import { toast } from "sonner"
 import { useEffect, useState } from "react"
-import { Head, usePage } from "@inertiajs/react"
+import { Head, usePage, router } from "@inertiajs/react"
 import type { BreadcrumbItem, SharedData } from "@/types"
+import { FolderTree } from "lucide-react"
 
 import { columns } from "./columns"
 import { DataTable } from "@/components/ui/data-table"
 import AppLayout from "@/components/layouts/app-layout"
-import { CategorySkeleton } from "@/components/fragments/category-skeleton"
+import { DataTableSkeleton } from "@/components/fragments/data-table-skeleton"
+import HoldPattern from "@/components/fragments/hold-pattern"
 
-// Define the Category type (add this to your types/index.d.ts if not already there)
 interface Category {
   id: number
   name: string
@@ -45,15 +46,27 @@ export default function Categories() {
     }
   }, [success, error, categories])
 
+  const handleCreateCategory = () => {
+    router.visit("/categories/create")
+  }
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Categories" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-          {isLoading || !categories ? (
-            <CategorySkeleton />
-          ) : (
+          {isLoading ? (
+            <DataTableSkeleton columnCount={4} rowCount={8} searchable={true} filterable={true} />
+          ) : categories && categories.data.length > 0 ? (
             <DataTable<Category, string> columns={columns} data={categories.data} searchKey="name" create="category" />
+          ) : (
+            <HoldPattern
+              title="No categories found"
+              description="You haven't created any categories yet. Categories help you organize your products."
+              icon={<FolderTree className="h-10 w-10 text-muted-foreground" />}
+              actionLabel="Create Category"
+              onAction={handleCreateCategory}
+            />
           )}
         </div>
       </div>
