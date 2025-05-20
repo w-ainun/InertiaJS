@@ -31,10 +31,22 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         $request->session()->regenerate();
-
-        // route after login logic for admin, client, and kurir
-        return redirect()->intended(route('dashboard', absolute: false));
+    
+        $user = Auth::user();
+    
+        // Redirect berdasarkan role
+        if ($user->role === 'ADMIN') {
+            return redirect()->route('dashboard');
+        } elseif ($user->role === 'CLIENT') {
+            return redirect()->route('Homepage');
+        } elseif ($user->role === 'COURIER') {
+            return redirect('/courier');
+        }
+    
+        // Default fallback
+        return redirect('/');
     }
+    
 
     /**
      * Destroy an authenticated session.

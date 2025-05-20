@@ -27,6 +27,9 @@ Route::get('/offers', function () {
 Route::get('/order', function () {
     return Inertia::render('order');
 });
+Route::get('/Homepage', function () {
+    return Inertia::render('Homepage');
+})->name('Homepage');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->group(function () {
