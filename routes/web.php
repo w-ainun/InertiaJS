@@ -28,6 +28,14 @@ Route::get('/order', function () {
     return Inertia::render('order');
 });
 
+
+Route::get('/pesanan-saya', function () {
+    return Inertia::render('PesananSaya', [
+        'user' => ['name' => 'Seinal Arifin'],
+        'cartItems' => ['count' => 23, 'total' => 100000],
+    ]);
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/', function () {
