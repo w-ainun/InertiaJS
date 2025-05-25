@@ -18,11 +18,11 @@ class User extends Authenticatable // singular version from table
     // override
     protected $table = 'users'; // default  plural table
     protected $primaryKey = 'id'; // default primaryKey
-    protected $with = [
-        'transactions',
-        // 'feedbacks',
-        'contacts',
-    ]; // lazy->eager loading
+    // protected $with = [
+    //     'transactions',
+    //     // 'feedbacks',
+    //     'contacts',
+    // ]; // lazy->eager loading
 
     public function transactions(): HasMany { // 1:M
         return $this->hasMany(Transaction::class, 'client_id', 'id');

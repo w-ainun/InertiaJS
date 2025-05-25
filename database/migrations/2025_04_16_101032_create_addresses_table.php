@@ -13,6 +13,7 @@ return new class extends Migration {
                 table: "contacts",
                 column: "id",
             );
+
             $table->string("post_code", 10);
             $table->string("country", 100);
             $table->string("province", 100);

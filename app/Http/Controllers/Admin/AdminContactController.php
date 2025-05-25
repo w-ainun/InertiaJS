@@ -6,10 +6,18 @@ use App\Models\Contact;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
+use App\Http\Resources\ContactResource;
+use Inertia\Inertia;
 
 class AdminContactController extends Controller {
     public function index() {
-        //
+        $contacts = Contact::all();
+
+        return Inertia::render('admins/contacts/index', [
+            'contacts' => ContactResource::collection($contacts),
+            'success' => session('success'),
+            'error' => session('error'),
+        ]);
     }
 
     public function create() {

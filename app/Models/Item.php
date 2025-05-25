@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Item extends Model {
     use HasFactory;
 
-    protected $with = ['category', 'transactions', 'ratings'];
+    // protected $with = ['category', 'transactions', 'ratings'];
 
     public function category(): BelongsTo { // M:1
         return $this->belongsTo(Category::class, 'category_id', 'id');
@@ -30,6 +30,7 @@ class Item extends Model {
     protected $fillable= [
         'category_id',
         'name', 'unit', 'price', 'stock',
-        'image_url', 'is_avaible', 'description', 'discount'
+        'image_url', 'is_avaible', 'description', 'discount',
+        'expired_at'
     ];
 }

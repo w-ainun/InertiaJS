@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Rating extends Model {
     use HasFactory;
 
-    protected $with = ['item'];
+    // protected $with = ['item'];
 
     public function item(): BelongsTo { // M:1
         return $this->belongsTo(Item::class, 'item_id', 'id');

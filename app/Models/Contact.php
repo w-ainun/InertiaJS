@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Contact extends Model {
     use HasFactory;
 
-    protected $with = ['user', 'addresses'];
+    // protected $with = ['user', 'addresses'];
 
     public function user(): BelongsTo { // M:1
         return $this->belongsTo(User::class, "user_id", "id");

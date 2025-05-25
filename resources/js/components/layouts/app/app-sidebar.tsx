@@ -10,8 +10,8 @@ import {
   Contact,
   Folder,
   LayoutGrid,
-  MessageSquareText,
-  Server,
+  // MessageSquareText,
+  // Server,
   Users,
 } from 'lucide-react';
 
@@ -63,22 +63,22 @@ const mainNavItems: NavItem[] = [
     href: route('transactions.index'),
     icon: BadgeDollarSign,
   },
-  {
-    title: 'Feedback',
-    href: '/feedbacks',
-    icon: MessageSquareText,
-  },
-  {
-    title: 'Server',
-    href: '/server',
-    icon: Server,
-  },
+  // {
+  //   title: 'Feedback',
+  //   href: '/feedbacks',
+  //   icon: MessageSquareText,
+  // },
+  // {
+  //   title: 'Server',
+  //   href: '/server',
+  //   icon: Server,
+  // },
 ];
 
 const footerNavItems: NavItem[] = [
   {
     title: 'Repository',
-    href: 'https://github.com/rhindottire/InertiaJS',
+    href: 'https://github.com/rhindottire/InertiaJS/tree/development',
     icon: Folder,
   },
   {

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Address extends Model {
     use HasFactory;
 
-    protected $with = ['contact'];
+    // protected $with = ['contact'];
 
     public function contact(): BelongsTo { // M:1
         return $this->belongsTo(Contact::class);

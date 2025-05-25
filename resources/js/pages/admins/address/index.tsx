@@ -1,22 +1,22 @@
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { Head, usePage } from '@inertiajs/react';
-import { BreadcrumbItem, Contact, SharedData } from '@/types';
+import { Address, BreadcrumbItem, SharedData } from '@/types';
 
 import { columns } from './columns';
 import { DataTable } from '@/components/ui/data-table';
 import AppLayout from '@/components/layouts/app-layout';
 
 const breadcrumbs: BreadcrumbItem[] = [{
-  title: 'Contacts',
-  href: '/contacts',
+  title: 'Addressess',
+  href: '/address',
 }];
 
 export default function Users() {
-  const { contacts, success, error } = usePage<
-    SharedData & { contacts: { data: Contact[] } }
+  const { address, success, error } = usePage<
+    SharedData & { address: { data: Address[] } }
   >().props;
-  console.log(contacts);
+  console.log(address);
 
   useEffect(() => {
     if (success) toast.success(success as string);
@@ -25,13 +25,13 @@ export default function Users() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Contacts" />
+      <Head title="Addressess" />
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-          <DataTable<Contact, string>
+          <DataTable<Address, string>
             columns={columns}
-            data={contacts.data}
-            searchKey="name"
+            data={address.data}
+            searchKey="post_code"
             create="contact"
           />
           {/* <BorderBeam size={300} duration={10} /> */}
