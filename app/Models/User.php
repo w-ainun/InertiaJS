@@ -16,7 +16,7 @@ class User extends Authenticatable // singular version from table
     use SoftDeletes;
 
     // override
-    protected $table = 'users'; // default  plural table
+    protected $table = 'users'; // default plural table
     protected $primaryKey = 'id'; // default primaryKey
     protected $with = [
         'transactions',
@@ -29,7 +29,7 @@ class User extends Authenticatable // singular version from table
     }
 
     // public function feedbacks(): HasMany { // 1:M
-    //     return $this->hasMany(Feedback::class, 'client_id', 'id');
+    // return $this->hasMany(Feedback::class, 'client_id', 'id');
     // }
 
     public function contacts(): HasMany{ // 1:M
@@ -42,10 +42,17 @@ class User extends Authenticatable // singular version from table
      * @var list<string>
      */
     protected $fillable = [
-        'username', 'email',
-        'password', 'role',
-        'status', 'avatar',
-        'email_verified_at'
+        'name',                 // Ditambahkan untuk nama dari Google
+        'username',
+        'email',
+        'password',
+        'role',
+        'status',
+        'avatar',
+        'email_verified_at',
+        'google_id',            // Ditambahkan untuk ID Google
+        'google_token',         // Ditambahkan untuk token Google (opsional, tapi baik untuk dimiliki)
+        'google_refresh_token', // Ditambahkan untuk refresh token Google (opsional)
     ];
 
     /**
@@ -56,6 +63,8 @@ class User extends Authenticatable // singular version from table
     protected $hidden = [
         'password',
         'remember_token',
+        'google_token',         // Opsional: sembunyikan token Google saat serialisasi
+        'google_refresh_token', // Opsional: sembunyikan refresh token Google
     ];
 
     /**
