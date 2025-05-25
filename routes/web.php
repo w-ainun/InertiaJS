@@ -31,6 +31,14 @@ Route::get('/Homepage', function () {
     return Inertia::render('Homepage');
 })->name('Homepage');
 
+
+Route::get('/pesanan-saya', function () {
+    return Inertia::render('PesananSaya', [
+        'user' => ['name' => 'Seinal Arifin'],
+        'cartItems' => ['count' => 23, 'total' => 100000],
+    ]);
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/', function () {
@@ -58,6 +66,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             echo "Ini halaman kurir ya cantik!";
         });
     });
+    Route::get('/pesanan-saya', function () {
+    return Inertia::render('PesananSaya', [
+        'user' => ['name' => 'Seinal Arifin'],
+        'cartItems' => ['count' => 23, 'total' => 100000],
+    ]);
+});
 });
 
 
