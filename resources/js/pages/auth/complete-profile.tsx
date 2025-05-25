@@ -39,9 +39,9 @@ export default function CompleteProfile() {
 
   const submit: FormEventHandler = (e) => {
     e.preventDefault();
-    post(route('profile.complete'), {
-      onError: (e) => console.log(e)
-    });
+    post(route('profile.store'), { 
+    onError: (e) => console.log(e)
+});
   };
 
   return (

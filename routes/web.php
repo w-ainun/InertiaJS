@@ -58,6 +58,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             echo "Ini halaman kurir ya cantik!";
         });
     });
+    Route::get('/pesanan-saya', function () {
+    return Inertia::render('PesananSaya', [
+        'user' => ['name' => 'Seinal Arifin'],
+        'cartItems' => ['count' => 23, 'total' => 100000],
+    ]);
+});
 });
 
 

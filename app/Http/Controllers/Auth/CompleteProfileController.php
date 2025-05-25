@@ -3,23 +3,23 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Contact;
-use App\Models\Address;
+use App\Models\Contact;  // Pastikan path ke model Anda benar
+use App\Models\Address;  // Pastikan path ke model Anda benar
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Inertia\Response;
+use Inertia\Response as InertiaResponse;
 
 class CompleteProfileController extends Controller
 {
     /**
      * Show the complete profile page.
      */
-    public function create(): Response
-     {
-        return Inertia::render('auth/complete-profile');
+    public function create(): InertiaResponse
+    {
+        return Inertia::render('auth/complete-profile'); // Pastikan path 'auth/complete-profile' sesuai
     }
 
     /**
@@ -29,12 +29,11 @@ class CompleteProfileController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:100',
             'phone' => 'required|string|max:20',
             'gender' => 'required|in:MAN,WOMAN',
             'birthday' => 'required|date',
-            // Validate address fields
             'post_code' => 'required|string|max:10',
             'country' => 'required|string|max:100',
             'province' => 'required|string|max:100',
@@ -43,41 +42,37 @@ class CompleteProfileController extends Controller
             'more' => 'nullable|string|max:50',
         ]);
 
-        // Use database transaction to ensure both contact and address are created together
         DB::beginTransaction();
         
         try {
-            // Create contact
             $contact = Contact::create([
-                'client_id' => Auth::id(),
-                'name' => $request->name,
-                'phone' => $request->phone,
-                'gender' => $request->gender,
-                'birthday' => $request->birthday,
+                'user_id' => Auth::id(), // Menggunakan user_id sesuai migrasi
+                'name' => $validatedData['name'],
+                'phone' => $validatedData['phone'],
+                'gender' => $validatedData['gender'],
+                'birthday' => $validatedData['birthday'],
             ]);
             
-            // Create address linked to the contact
-            Address::create([
+            Address::create([ // Menggunakan $address = Address::create(...) jika Anda perlu menggunakan $address setelah ini
                 'contact_id' => $contact->id,
-                'post_code' => $request->post_code,
-                'country' => $request->country,
-                'province' => $request->province,
-                'city' => $request->city,
-                'street' => $request->street,
-                'more' => $request->more,
+                'post_code' => $validatedData['post_code'],
+                'country' => $validatedData['country'],
+                'province' => $validatedData['province'],
+                'city' => $validatedData['city'],
+                'street' => $validatedData['street'],
+                'more' => $validatedData['more'],
             ]);
-            
+
             DB::commit();
             
-            return to_route('dashboard');
+            return to_route('Homepage'); 
+
         } catch (\Exception $e) {
             DB::rollBack();
             
-            // You may want to log the error here
-            
             return back()->withErrors([
-                'error' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.'
-            ]);
+                'error' => 'Terjadi kesalahan saat menyimpan profil Anda. Silakan coba lagi nanti.' . (config('app.debug') ? ' Pesan: ' . $e->getMessage() : '') // Tampilkan pesan detail jika debug mode aktif
+            ])->withInput(); // Mengembalikan input sebelumnya agar form tidak kosong
         }
     }
 }
