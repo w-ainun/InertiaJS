@@ -11,16 +11,16 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({ className = "" }) => {
       aria-label="header navigation"
       className={`flex justify-between items-center px-4 h-14 bg-neutral-200 rounded-b-2xl ${className}`}
     >
-      <p>
+      <p className="text-black">
         🌟 Get 5% Off your first order,{" "}
         <Link href="#" className="text-[#51793E] font-bold underline">
           Promo: ORDER5
         </Link>
       </p>
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center text-black">
         <MapPin />
-        <p>
+        <p className="text-black">
           <strong>Jl. Telang Indah Barat, Bangkalan</strong>
         </p>
         <Link href="#" className="text-[#51793E] font-bold underline">

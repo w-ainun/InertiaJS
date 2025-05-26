@@ -3,7 +3,7 @@ import TrackingCard from '../tracking-card';
 export default function Jumbotron() {
   return (
     <section aria-label="jumbotron" className="relative mx-16 mt-3 h-[38rem] overflow-hidden rounded-2xl border bg-[#FBFBFB] text-black">
-      <img src="/img/klepon.png" alt="gambar klepon" className="absolute top-[60%] left-[50%] z-10 translate-x-[-50%] translate-y-[-50%]" />
+      <img src="/img/klepon.png" alt="gambar klepon" className="absolute top-[60%] left-[46%] z-10 translate-x-[-50%] translate-y-[-50%]" />
       <div className="absolute top-10 right-0 h-full w-[45%] rounded-tl-[45%] bg-[#51793E]"></div>
 
       <TrackingCard
