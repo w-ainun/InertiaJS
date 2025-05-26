@@ -9,9 +9,9 @@ type FooterColumnProps = {
 
 const FooterColumn: React.FC<FooterColumnProps> = ({ title, links }) => (
   <nav aria-label={title} className="flex flex-col gap-4">
-    <h2 className="text-lg font-bold">{title}</h2>
+    <h2 className="text-lg font-bold text-black">{title}</h2>
     {links.map((link, index) => (
-      <TextLink key={index} href={link.href} className="text-sm">
+      <TextLink key={index} href={link.href} className="text-sm text-black">
         {link.label}
       </TextLink>
     ))}
@@ -25,11 +25,11 @@ type FooterLayoutProps = React.HTMLAttributes<HTMLElement> & {
 export default function FooterLayout({ className = '', ...props }: FooterLayoutProps) {
   return (
     <footer className={className} {...props}>
-      <main className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-10 bg-[#D9D9D9] px-20 py-20 pb-10">
+      <main className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-10 bg-[#D9D9D9] px-20 py-20 pb-10 text-black">
         <section className="flex max-w-sm flex-col">
           {/* <FigureCap src="/svg/order-2.svg" alt="Order logo" />
           <FigureCap src="/img/googleApp.png" alt="Download on app stores" /> */}
-          <FigureCap src="/RB-Store.png" alt="RB Store" />
+          <FigureCap src="/RB-Store1.png" alt="RB Store" />
           <p className="mt-2">Company # 490039-445, Registered with House of companies.</p>
         </section>
 
@@ -72,25 +72,28 @@ export default function FooterLayout({ className = '', ...props }: FooterLayoutP
           />
         </section>
 
-        <FooterColumn
-          title="Legal Pages"
-          links={[
-            { label: 'Terms and conditions', href: '#' },
-            { label: 'Privacy', href: '#' },
-            { label: 'Cookies', href: '#' },
-            { label: 'Modern Slavery Statement', href: '#' },
-          ]}
-        />
-
-        <FooterColumn
-          title="Important Links"
-          links={[
-            { label: 'Get help', href: '#' },
-            { label: 'Add your restaurant', href: '#' },
-            { label: 'Sign up to deliver', href: '#' },
-            { label: 'Create a business account', href: '#' },
-          ]}
-        />
+        <div>
+          <FooterColumn 
+            title="Legal Pages"
+            links={[
+              { label: 'Terms and conditions', href: '#' },
+              { label: 'Privacy', href: '#' },
+              { label: 'Cookies', href: '#' },
+              { label: 'Modern Slavery Statement', href: '#' },
+            ]}
+          />
+        </div>
+        <div>
+          <FooterColumn
+            title="Important Links"
+            links={[
+              { label: 'Get help', href: '#' },
+              { label: 'Add your restaurant', href: '#' },
+              { label: 'Sign up to deliver', href: '#' },
+              { label: 'Create a business account', href: '#' },
+            ]}
+          />
+        </div>
       </main>
 
       <aside className="flex w-full flex-wrap justify-between gap-4 bg-black px-20 py-5 text-white">
