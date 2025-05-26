@@ -30,6 +30,9 @@ Route::get('/order', function () {
 Route::get('/Homepage', function () {
     return Inertia::render('Homepage');
 })->name('Homepage');
+Route::get('/Delivery', function () {
+    return Inertia::render('Delivery');
+})->name('Delivery');
 
 
 Route::get('/pesanan-saya', function () {
