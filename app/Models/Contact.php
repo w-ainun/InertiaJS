@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasMany; // Import HasMany
 
 class Contact extends Model {
     use HasFactory;
 
-    // protected $with = ['user', 'addresses'];
+    // protected $with = ['user', 'addresses']; // Eager load plural addresses
 
-    public function user(): BelongsTo { // M:1
+    public function user(): BelongsTo {
         return $this->belongsTo(User::class, "user_id", "id");
     }
 
-    public function addresses(): HasMany { // 1:M
+    public function addresses(): HasMany { // Changed back to HasMany for multiple addresses
         return $this->hasMany(Address::class, "contact_id", "id");
     }
 

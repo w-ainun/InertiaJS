@@ -43,15 +43,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    // Anda memiliki grup middleware 'auth' yang ter-nesting di sini.
-    // Biasanya cukup satu Route::middleware('auth')->group() saja.
-    // Saya akan biarkan struktur Anda saat ini, tetapi ini adalah sesuatu yang mungkin ingin Anda tinjau.
-    Route::middleware('auth')->group(function () {
-        Route::get('complete-profile', [CompleteProfileController::class, 'create'])
-            ->name('profile.create');
-        Route::post('complete-profile', [CompleteProfileController::class, 'store'])
-            ->name('profile.store');
-    });
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 
