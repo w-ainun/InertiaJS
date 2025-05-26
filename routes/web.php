@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminTransactionController;
 use App\Http\Controllers\Admin\AdminTransactionDetailController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Client\ProfileControllerClient;
+use App\Http\Controllers\Client\CartController;
 use Illuminate\Support\Facades\Route;
 
 use Inertia\Inertia;
@@ -75,6 +76,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/profile', [ProfileControllerClient::class, 'show'])->name('profile.show');
         Route::post('/profile', [ProfileControllerClient::class, 'update'])->name('profile.update');
     });
+
+Route::group(['as' => 'client.', 'prefix' => 'client'], function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
+    Route::patch('/cart/update', [CartController::class, 'updateCart'])->name('cart.update');
+    Route::delete('/cart/remove', [CartController::class, 'removeFromCart'])->name('cart.remove');
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+    Route::get('/cart/count', [CartController::class, 'getCartCount'])->name('cart.count');
+    Route::get('/orders/{transaction}', function ($transaction) {
+        return Inertia::render('Client/OrderConfirmation', ['transactionId' => $transaction]);
+    })->name('orders.show');
+});
+
    
 });
 

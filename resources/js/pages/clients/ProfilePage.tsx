@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
-import { ChevronDown, User, ArrowLeft, MapPin, XCircle, PlusCircle, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, User, ArrowLeft, MapPin, XCircle, PlusCircle, Trash2 } from 'lucide-react'; // Tambahkan ChevronUp
 import { useForm, Head } from '@inertiajs/react';
 
 // Define interfaces for better type checking
@@ -61,7 +61,7 @@ interface ProfileFormData {
 export default function ProfilePage({ user, contact, addresses: initialAddresses, flash, errors: serverErrors }: ProfilePageProps) {
 
   const { data, setData, post, processing, errors, reset, progress } = useForm<ProfileFormData>({
-    _method: 'POST',
+    _method: 'POST', // Default method, can be overridden by specific actions if needed.
     name: user.name,
     username: user.username,
     email: user.email,
@@ -77,15 +77,27 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
   });
 
   const [profilePreview, setProfilePreview] = useState<string | null>(data.current_profile_url);
+  // State untuk mengontrol alamat mana yang terbuka
+  const [openAddressIndexes, setOpenAddressIndexes] = useState<number[]>([]);
 
   useEffect(() => {
     setData('addresses', initialAddresses || []);
+    // Secara default, semua alamat tertutup saat pertama kali dimuat
+    setOpenAddressIndexes([]);
   }, [initialAddresses]);
 
   useEffect(() => {
     setProfilePreview(data.current_profile_url);
   }, [data.current_profile_url]);
 
+  // Fungsi untuk toggle visibilitas form alamat
+  const toggleAddressForm = (index: number) => {
+    setOpenAddressIndexes(prevIndexes =>
+      prevIndexes.includes(index)
+        ? prevIndexes.filter(i => i !== index)
+        : [...prevIndexes, index]
+    );
+  };
 
   const handleAddressChange = (index: number, field: keyof AddressProps, value: string) => {
     setData(prevData => {
@@ -100,6 +112,7 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
   };
 
   const handleAddAddress = () => {
+    const newAddressIndex = data.addresses.length;
     setData(prevData => ({
       ...prevData,
       addresses: [
@@ -107,6 +120,8 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
         { id: undefined, post_code: '', country: '', province: '', city: '', street: '', more: '' }
       ]
     }));
+    // Buka form alamat yang baru ditambahkan
+    setOpenAddressIndexes(prevIndexes => [...prevIndexes, newAddressIndex]);
   };
 
   const handleRemoveAddress = (index: number) => {
@@ -116,6 +131,8 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
         updatedAddresses.splice(index, 1);
         return { ...prevData, addresses: updatedAddresses };
       });
+      // Tutup form jika alamat yang dihapus sedang terbuka dan sesuaikan indeks
+      setOpenAddressIndexes(prevIndexes => prevIndexes.filter(i => i !== index).map(i => i > index ? i -1 : i) );
     }
   };
 
@@ -145,7 +162,7 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     post(route('profile.update'), {
-      forceFormData: true,
+      forceFormData: true, // Penting jika ada file upload
       onSuccess: (page) => {
         const pageProps = page.props as unknown as ProfilePageProps;
         const newFlash = pageProps.flash;
@@ -172,12 +189,13 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
         addressItem.post_code,
         addressItem.more
     ];
-    const parts = relevantFields.filter(Boolean);
+    const parts = relevantFields.filter(Boolean); // Filter nilai yang kosong atau null
     if (parts.length === 0) {
-        return 'Alamat belum diisi';
+        return 'Alamat belum diisi lengkap'; // Atau pesan default lainnya
     }
     return parts.join(', ');
   };
+
 
   const displayErrors = errors || serverErrors || {};
   const typedErrors = displayErrors as Record<string, string>;
@@ -280,10 +298,10 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
                   <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
                   <input type="file" accept="image/*" onChange={handleFileChange} className={`${inputClassName} mb-2`} />
                    {progress && (
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress.percentage}%` }}></div>
-                    </div>
-                    )}
+                     <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                       <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress.percentage}%` }}></div>
+                     </div>
+                   )}
                   {typedErrors.profile && <p className={errorClassName}>{typedErrors.profile}</p>}
                   {profilePreview && (
                     <div className="mt-2 flex items-center space-x-2">
@@ -304,7 +322,7 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
                 <button
                   type="button"
                   onClick={handleAddAddress}
-                  className="px-4 py-2 bg-[#51793E] text-white font-medium rounded-md hover:bg-opacity-90 flex items-center text-sm" // Diubah
+                  className="px-4 py-2 bg-[#51793E] text-white font-medium rounded-md hover:bg-opacity-90 flex items-center text-sm"
                 >
                   <PlusCircle className="w-4 h-4 mr-2" /> Tambah Alamat
                 </button>
@@ -312,54 +330,81 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
               {data.addresses.length === 0 && (
                 <p className="text-gray-500 text-sm">Belum ada alamat tersimpan. Klik "Tambah Alamat" untuk menambahkan.</p>
               )}
-              {data.addresses.map((addressItem, index) => (
-                <div key={addressItem.id || `new-address-${index}`} className="border border-gray-200 rounded-lg p-4 mb-4 relative">
-                  <button type="button" onClick={() => handleRemoveAddress(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1 rounded-full" title="Hapus alamat ini">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <MapPin className="w-4 h-4 text-green-600" />
+              {data.addresses.map((addressItem, index) => {
+                const isOpen = openAddressIndexes.includes(index);
+                return (
+                  <div key={addressItem.id || `new-address-${index}`} className="border border-gray-200 rounded-lg mb-4 overflow-hidden">
+                    {/* Tombol untuk Hapus Alamat */}
+                    <button
+                        type="button"
+                        onClick={() => handleRemoveAddress(index)}
+                        className="absolute top-2 right-2 z-10 text-red-500 hover:text-red-700 p-1 rounded-full bg-white bg-opacity-75 hover:bg-opacity-100"
+                        title="Hapus alamat ini"
+                        style={{ transform: 'translate(-8px, 8px)' }} // Sedikit penyesuaian posisi
+                      >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                    {/* Header Alamat yang bisa di-klik */}
+                    <div
+                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                      onClick={() => toggleAddressForm(index)}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center mt-1 ${isOpen ? 'bg-green-500' : 'bg-gray-200'}`}>
+                          <MapPin className={`w-4 h-4 ${isOpen ? 'text-white' : 'text-gray-500'}`} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">Alamat {index + 1}</p>
+                          {!isOpen && ( // Tampilkan ringkasan hanya jika tertutup
+                            <p className="text-sm text-gray-600 mt-1 truncate max-w-md">
+                              {formatAddress(addressItem) || 'Klik untuk mengisi alamat'}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {isOpen ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">Alamat {index + 1}</p>
-                      <p className="text-sm text-gray-600 mt-1">{formatAddress(addressItem)}</p>
-                    </div>
+
+                    {/* Form Input Alamat (Collapsible) */}
+                    {isOpen && (
+                      <div className="p-4 border-t border-gray-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
+                            <input type="text" value={addressItem.post_code} onChange={(e) => handleAddressChange(index, 'post_code', e.target.value)} className={inputClassName} placeholder="12345" />
+                            {typedErrors[`addresses.${index}.post_code`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.post_code`]}</p>}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Negara</label>
+                            <input type="text" value={addressItem.country} onChange={(e) => handleAddressChange(index, 'country', e.target.value)} className={inputClassName} placeholder="Indonesia" />
+                            {typedErrors[`addresses.${index}.country`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.country`]}</p>}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
+                            <input type="text" value={addressItem.province} onChange={(e) => handleAddressChange(index, 'province', e.target.value)} className={inputClassName} placeholder="Jawa Timur" />
+                            {typedErrors[`addresses.${index}.province`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.province`]}</p>}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kota</label>
+                            <input type="text" value={addressItem.city} onChange={(e) => handleAddressChange(index, 'city', e.target.value)} className={inputClassName} placeholder="Bangkalan" />
+                            {typedErrors[`addresses.${index}.city`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.city`]}</p>}
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Jalan</label>
+                            <input type="text" value={addressItem.street} onChange={(e) => handleAddressChange(index, 'street', e.target.value)} className={inputClassName} placeholder="Jl telang indah 2 timur" />
+                            {typedErrors[`addresses.${index}.street`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.street`]}</p>}
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Detail Tambahan</label>
+                            <input type="text" value={addressItem.more} onChange={(e) => handleAddressChange(index, 'more', e.target.value)} className={inputClassName} placeholder="Rumah nomor 69162" />
+                            {typedErrors[`addresses.${index}.more`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.more`]}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
-                      <input type="text" value={addressItem.post_code} onChange={(e) => handleAddressChange(index, 'post_code', e.target.value)} className={inputClassName} placeholder="12345" />
-                      {typedErrors[`addresses.${index}.post_code`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.post_code`]}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Negara</label>
-                      <input type="text" value={addressItem.country} onChange={(e) => handleAddressChange(index, 'country', e.target.value)} className={inputClassName} placeholder="Indonesia" />
-                      {typedErrors[`addresses.${index}.country`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.country`]}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
-                      <input type="text" value={addressItem.province} onChange={(e) => handleAddressChange(index, 'province', e.target.value)} className={inputClassName} placeholder="Jawa Timur" />
-                      {typedErrors[`addresses.${index}.province`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.province`]}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Kota</label>
-                      <input type="text" value={addressItem.city} onChange={(e) => handleAddressChange(index, 'city', e.target.value)} className={inputClassName} placeholder="Bangkalan" />
-                      {typedErrors[`addresses.${index}.city`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.city`]}</p>}
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Jalan</label>
-                      <input type="text" value={addressItem.street} onChange={(e) => handleAddressChange(index, 'street', e.target.value)} className={inputClassName} placeholder="Jl telang indah 2 timur" />
-                      {typedErrors[`addresses.${index}.street`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.street`]}</p>}
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Detail Tambahan</label>
-                      <input type="text" value={addressItem.more} onChange={(e) => handleAddressChange(index, 'more', e.target.value)} className={inputClassName} placeholder="Rumah nomor 69162" />
-                      {typedErrors[`addresses.${index}.more`] && <p className={errorClassName}>{typedErrors[`addresses.${index}.more`]}</p>}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Submit Button */}
@@ -367,7 +412,7 @@ export default function ProfilePage({ user, contact, addresses: initialAddresses
               <button
                 type="submit"
                 disabled={processing}
-                className="px-6 py-2 bg-[#51793E] text-white font-medium rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[#51793E] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed" // Diubah
+                className="px-6 py-2 bg-[#51793E] text-white font-medium rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[#51793E] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing ? 'Menyimpan...' : 'Simpan'}
               </button>

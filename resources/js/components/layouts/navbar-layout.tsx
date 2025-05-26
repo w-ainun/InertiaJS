@@ -36,14 +36,13 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
 
   return (
     <section aria-label="navigation" className={`flex justify-between items-center ${className}`}>
-      <FigureCap src="RB-Store1.png" alt="RB Store" className="w-72" />
+      <FigureCap src="RB-Store1.png" alt="" className="w-72" />
 
       <div className="flex items-center gap-6">
         <NavbarTemplate />
           {/* guna activatepage untuk ketika berada dihalaman yang sesuai navbar tombol otomatis ganti backgroundnya */}
         <div className="flex gap-4">
             <Link
-            // sesuaikan dengan alamat routenya
               href="/Homepage" 
               className={`flex items-center rounded-full px-6 py-1 font-medium transition-colors duration-200 ${
                 activePage === "/Homepage"
@@ -89,7 +88,9 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
           ) : (
             <>
               <img src="/svg/male.svg" alt="user" className="pr-2 h-6 w-6" />
-              <span>Halo, {user.username}</span>
+              <Link href={route('profile.show')} className="hover:underline"> {/* Diubah */}
+                Halo, {user.username}
+              </Link>
               {/* <button onClick={handleLogout} className="ml-4 underline">Logout</button> */}
             </>
           )}
