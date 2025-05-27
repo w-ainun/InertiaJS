@@ -9,12 +9,15 @@ use App\Http\Controllers\Admin\AdminRatingController;
 use App\Http\Controllers\Admin\AdminTransactionController;
 use App\Http\Controllers\Admin\AdminTransactionDetailController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Client\ProfileControllerClient;
+use App\Http\Controllers\Client\CartController;
 use Illuminate\Support\Facades\Route;
+
 use Inertia\Inertia;
 
 Route::get('/', function () { // routes
     return Inertia::render('welcome'); // file name
-})->name('landing_page'); // name for pages
+})->name('landing page'); // name for pages
 
 Route::get('/menu', function () {
     return Inertia::render('menu');
@@ -26,6 +29,20 @@ Route::get('/offers', function () {
 
 Route::get('/order', function () {
     return Inertia::render('order');
+});
+Route::get('/Homepage', function () {
+    return Inertia::render('Homepage');
+})->name('Homepage');
+Route::get('/Delivery', function () {
+    return Inertia::render('Delivery');
+})->name('Delivery');
+
+
+Route::get('/pesanan-saya', function () {
+    return Inertia::render('PesananSaya', [
+        'user' => ['name' => 'Seinal Arifin'],
+        'cartItems' => ['count' => 23, 'total' => 100000],
+    ]);
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -50,12 +67,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('home');
     });
 
-    Route::prefix('kurir')->group(function () {
+    Route::prefix('courier')->group(function () {
         Route::get('/', function () {
             echo "Ini halaman kurir ya cantik!";
         });
     });
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/profile', [ProfileControllerClient::class, 'show'])->name('profile.show');
+        Route::post('/profile', [ProfileControllerClient::class, 'update'])->name('profile.update');
+    });
+
+Route::group(['as' => 'client.', 'prefix' => 'client'], function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
+    Route::patch('/cart/update', [CartController::class, 'updateCart'])->name('cart.update');
+    Route::delete('/cart/remove', [CartController::class, 'removeFromCart'])->name('cart.remove');
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+    Route::get('/cart/count', [CartController::class, 'getCartCount'])->name('cart.count');
+    Route::get('/orders/{transaction}', function ($transaction) {
+        return Inertia::render('Client/OrderConfirmation', ['transactionId' => $transaction]);
+    })->name('orders.show');
 });
+
+   
+});
+
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

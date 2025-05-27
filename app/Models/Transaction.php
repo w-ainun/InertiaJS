@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Transaction extends Model {
     use HasFactory;
 
-    protected $with = ['user', 'items'];
+    // protected $with = ['user', 'items'];
 
     public function user(): BelongsTo { // M:1
         return $this->belongsTo(User::class, 'client_id', 'id');

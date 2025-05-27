@@ -19,8 +19,9 @@ return new class extends Migration {
             $table->integer('stock');
             $table->string('image_url');
             $table->boolean('is_available')->default(true); // Toggle for visibility
-            $table->text('description')->nullable();
+            $table->longText('description')->nullable();
             $table->float('discount')->default(0);
+            $table->date('expired_at');
 
             $table->timestamps();
         });

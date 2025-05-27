@@ -6,10 +6,18 @@ use App\Models\Address;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAddressRequest;
 use App\Http\Requests\UpdateAddressRequest;
+use App\Http\Resources\AddressResource;
+use Inertia\Inertia;
 
 class AdminAddressController extends Controller {
     public function index() {
-        //
+        $address = Address::all();
+
+        return Inertia::render('admins/address/index', [
+            'address' => AddressResource::collection($address),
+            'success' => session('success'),
+            'error' => session('error'),
+        ]);
     }
 
     public function create() {

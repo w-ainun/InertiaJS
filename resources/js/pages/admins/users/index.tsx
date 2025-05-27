@@ -17,7 +17,6 @@ export default function Users() {
   const { users, success, error } = usePage<
     SharedData & { users: { data: User[] } }
   >().props;
-
   console.log(users);
 
   // const [ role, setRole ] = useState<User[]>([]);
@@ -44,7 +43,7 @@ export default function Users() {
           <DataTable<User, string>
             columns={columns}
             data={users.data}
-            searchKey="name"
+            searchKey="username"
             create="user"
           />
           {/* <BorderBeam size={300} duration={10} /> */}
