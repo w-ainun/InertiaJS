@@ -9,6 +9,9 @@ use App\Http\Controllers\Admin\AdminRatingController;
 use App\Http\Controllers\Admin\AdminTransactionController;
 use App\Http\Controllers\Admin\AdminTransactionDetailController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Models\Item;
+use App\Models\Category;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -41,6 +44,29 @@ Route::get('/pesanan-saya', function () {
         'cartItems' => ['count' => 23, 'total' => 100000],
     ]);
 });
+
+// kategori-database
+// Controller
+Route::get('/menu', [CategoryController::class, 'index']);
+Route::get('/menu/{slug}', [CategoryController::class, 'show']);
+
+
+// // Closure
+// Route::get('/menu', function () {
+//     $categories = Category::all();
+//     return Inertia::render('clients/menu', [
+//         'categories' => $categories
+//     ]);
+// });
+// Route::get('/menu/{slug}', function ($slug) {
+//     $category = Category::where('slug', $slug)->firstOrFail();
+//     $items = $category->items()->where('is_available', true)->get();
+
+//     return Inertia::render('clients/kategori', [
+//         'kategori' => $category->name,
+//         'produk' => $items
+//     ]);
+// });
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->group(function () {
