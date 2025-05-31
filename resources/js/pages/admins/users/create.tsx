@@ -103,6 +103,7 @@ export default function UsersCreate() {
                   <Input
                     id="username"
                     name="username"
+                    type="text"
                     placeholder="Enter username"
                     value={data.username}
                     onChange={(e) => setData("username", e.target.value)}

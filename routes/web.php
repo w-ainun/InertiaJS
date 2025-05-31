@@ -19,9 +19,9 @@ Route::get('/', function () { // routes
     return Inertia::render('welcome'); // file name
 })->name('landing page'); // name for pages
 
-Route::get('/menu', function () {
-    return Inertia::render('menu');
-})->name('menu');
+// Route::get('/menu', function () {
+//     return Inertia::render('menu');
+// })->name('menu');
 
 Route::get('/offers', function () {
     return Inertia::render('offers');

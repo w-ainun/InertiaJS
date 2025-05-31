@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->string("profile")->nullable(true);
             $table->enum("gender", ["MAN", "WOMAN"])->nullable(false);
             $table->date("birthday")->nullable(false);
-            $table->json('favourite')->nullable(true);
+            $table->json("favourite")->nullable(true);
 
             $table->timestamps();
             $table->softDeletes();

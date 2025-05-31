@@ -21,6 +21,9 @@ export interface NavItem {
 export interface SharedData {
   auth: Auth;
   name: string;
+  contacts: {
+    data: Contact[];
+  };
   [key: string]: unknown;
   ziggy: Config & { location: string };
   quote: { message: string; author: string };
@@ -52,6 +55,8 @@ export interface Contact {
   created_at: string;         // ISO timestamp
   updated_at: string;         // ISO timestamp
   deleted_at?: string | null; // softDeletes
+  user: User;                 // M:1
+  // addressess: Address[];      // 1:M
   [key: string]: unknown;     // untuk properti tambahan
 }
 
