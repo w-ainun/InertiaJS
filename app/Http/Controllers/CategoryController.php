@@ -23,7 +23,9 @@ public function show($slug)
 
     return Inertia::render('clients/kategori', [
         'kategori' => $category->name,
-        'produk' => $items
+        'produk' => $items,
+        'gambar' => $category->image_url,
+        'notice' => $category->description,
     ]);
 }
 
