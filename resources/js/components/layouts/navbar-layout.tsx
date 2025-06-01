@@ -59,7 +59,7 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
 
   return (
     <section aria-label="navigation" className={`flex justify-between items-center ${className}`}>
-      <FigureCap src="RB-Store1.png" alt="RB Store Logo" className="w-72" /> {/* Added descriptive alt text */}
+      <FigureCap src="/RB-Store1.png" alt="RB Store Logo" className="w-72" /> {/* Added descriptive alt text */}
 
       <div className="flex items-center gap-6">
         <div className="flex gap-4">
