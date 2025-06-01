@@ -6,9 +6,11 @@ import InputError from '@/components/elements/input-error';
 import Label from '@/components/elements/label';
 import Separator from '@/components/elements/separator';
 import AppLayout from '@/components/layouts/app-layout';
+import DatePicker from '@/components/ui/date-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { BreadcrumbItem, SharedData, User } from '@/types';
+import { formatDateForMySQL, parseMySQLDate } from '@/utils';
 import { useForm, usePage } from '@inertiajs/react';
 import { Calendar, ChevronLeft, Heart, LoaderCircle, Phone, UserIcon, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -18,6 +20,7 @@ export default function ContactsCreate() {
   const { users, success, error } = usePage<SharedData & { users: { data: User[] } }>().props;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [favouriteInput, setFavouriteInput] = useState('');
 
   const { data, setData, post, processing, errors, reset } = useForm<{
     user_id: string;
@@ -66,6 +69,10 @@ export default function ContactsCreate() {
       },
     });
   };
+
+  useEffect(() => {
+    setFavouriteInput(data.favourite.join(', '));
+  }, [data.favourite]);
 
   useEffect(() => {
     if (success) toast.success(success as string);
@@ -174,35 +181,33 @@ export default function ContactsCreate() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <RadioGroup>
-                    <Label htmlFor="gender" className="text-sm font-medium">
+                  <div className="space-y-2">
+                    <Label className="mb-4 text-sm font-medium">
                       Gender <span className="text-red-500">*</span>
                     </Label>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="MAN" id="MAN" />
-                      <Label htmlFor="MAN">MAN</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="WOMAN" id="WOMAN" />
-                      <Label htmlFor="WOMAN">WOMAN</Label>
-                    </div>
-                  </RadioGroup>
+                    <RadioGroup value={data.gender} onValueChange={(value) => setData('gender', value)} className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="MAN" id="gender-man" />
+                        <Label htmlFor="gender-man">Man</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="WOMAN" id="gender-woman" />
+                        <Label htmlFor="gender-woman">Woman</Label>
+                      </div>
+                    </RadioGroup>
+                    {errors.gender && <InputError id="gender-error" message={errors.gender} />}
+                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="birthday" className="text-sm font-medium">
                       Birthday
                     </Label>
-                    <Input
-                      id="birthday"
-                      name="birthday"
-                      type="date"
-                      value={data.birthday}
-                      onChange={(e) => setData('birthday', e.target.value)}
-                      aria-invalid={errors.birthday ? 'true' : 'false'}
-                      aria-describedby={errors.birthday ? 'birthday-error' : undefined}
-                      className="focus:ring-2 focus:ring-blue-500"
+                    <DatePicker
+                      date={data.birthday ? parseMySQLDate(data.birthday!) : undefined}
+                      setDate={(date) => {
+                        setData('birthday', formatDateForMySQL(date!));
+                      }}
                     />
-                    {errors.birthday && <InputError id="birthday-error" message={errors.birthday} />}
                   </div>
                 </div>
               </div>
@@ -228,7 +233,7 @@ export default function ContactsCreate() {
                       aria-describedby={errors.profile ? 'profile-error' : undefined}
                       className="w-full focus:ring-2 focus:ring-blue-500"
                     />
-                    {data.profile && <span className="text-sm font-medium text-green-600">✓ {data.profile.name}</span>}
+                    {data.profile && <span className="text-sm font-medium text-green-600">✓{data.profile.name}</span>}
                   </div>
                   {errors.profile && <InputError id="profile-error" message={errors.profile} />}
                   <p className="text-xs">Supported formats: JPEG, PNG, JPG, GIF. Max size: 5MB</p>
@@ -245,9 +250,10 @@ export default function ContactsCreate() {
                     id="favourite"
                     name="favourite"
                     placeholder="e.g., Music, Sports, Reading, Cooking..."
-                    value={data.favourite.join(', ')}
-                    onChange={(e) => {
-                      const values = e.target.value
+                    value={favouriteInput}
+                    onChange={(e) => setFavouriteInput(e.target.value)}
+                    onBlur={() => {
+                      const values = favouriteInput
                         .split(',')
                         .map((v) => v.trim())
                         .filter((v) => v.length > 0);

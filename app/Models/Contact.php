@@ -25,4 +25,8 @@ class Contact extends Model {
         'name', 'gender', 'phone',
         'profile', 'birthday', 'favourite',
     ];
+
+    protected $casts = [
+        'favourite' => 'array',
+    ];
 }

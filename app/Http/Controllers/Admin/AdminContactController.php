@@ -36,7 +36,6 @@ class AdminContactController extends Controller {
     public function store(StoreContactRequest $request) {
         try {
             $validated = $request->validated();
-            $validated['favourite'] = json_encode($validated['favourite']);
             Contact::create($validated);
 
             return redirect()->route('contacts.index')->with('success', 'Contact created successfully.');
@@ -62,10 +61,33 @@ class AdminContactController extends Controller {
     }
 
     public function update(UpdateContactRequest $request, Contact $contact) {
-        //
+        try {
+            $validated = $request->validated();
+
+            if ($request->hasFile('profile')) {
+                $path = $request->file('profile')->store('profiles', 'public');
+                $validated['profile'] = $path;
+            }
+
+            $validated['favourite'] = json_encode($validated['favourite']);
+            $contact->update($validated);
+
+            return redirect()->route('contacts.index')->with('success', 'Contact updated successfully.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update Contact.');
+        }
     }
 
     public function destroy(Contact $contact) {
-        //
+        try {
+            $contact->delete();
+
+            return redirect()->back()->with('success', 'Contact deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to delete contact.');
+        }
     }
 }

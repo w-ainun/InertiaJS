@@ -1,8 +1,8 @@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { BreadcrumbItem, Contact, SharedData, User } from '@/types';
-import { useForm, usePage } from '@inertiajs/react';
-import { Calendar, ChevronLeft, Heart, LoaderCircle, Phone, UserIcon, UserPlus } from 'lucide-react';
+import { router, useForm, usePage } from '@inertiajs/react';
+import { Calendar, ChevronLeft, LoaderCircle, Phone, UserIcon, UserPlus } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -15,7 +15,7 @@ import Separator from '@/components/elements/separator';
 import AppLayout from '@/components/layouts/app-layout';
 import DatePicker from '@/components/ui/date-picker';
 
-export default function ContactsCreate() {
+export default function ContactsEdit() {
   const { contacts, users, success, error } = usePage<
     SharedData & {
       contacts: { data: Contact };
@@ -26,7 +26,7 @@ export default function ContactsCreate() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const { data, setData, put, processing, errors, reset } = useForm({
     user_id: contacts.data.user_id,
     name: contacts.data.name,
     phone: contacts.data.phone,
@@ -34,7 +34,7 @@ export default function ContactsCreate() {
     profile: null as File | string | null,
     gender: contacts.data.gender,
     birthday: contacts.data.birthday,
-    favourite: [] as string[],
+    favourite: contacts.data.favourite || [] as string[],
   });
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -52,7 +52,8 @@ export default function ContactsCreate() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    post(route('contacts.store'), {
+    put(route('contacts.update', contacts.data.id), {
+      // forceFormData: true,
       onSuccess: () => {
         toast.success('Contact created successfully');
         reset('user_id', 'name', 'phone', 'profile', 'gender', 'birthday', 'favourite');
@@ -196,21 +197,13 @@ export default function ContactsCreate() {
                   </RadioGroup>
 
                   <div className="space-y-2">
-                    {/* <Label htmlFor="birthday" className="text-sm font-medium">
+                    <Label htmlFor='birthday'>
                       Birthday
                     </Label>
-                    <Input
-                      id="birthday"
-                      name="birthday"
-                      type="date"
-                      value={data.birthday}
-                      onChange={(e) => setData('birthday', e.target.value)}
-                      aria-invalid={errors.birthday ? 'true' : 'false'}
-                      aria-describedby={errors.birthday ? 'birthday-error' : undefined}
-                      className="focus:ring-2 focus:ring-blue-500"
+                    <DatePicker
+                      date={data.birthday ? new Date(data.birthday) : undefined}
+                      setDate={(date) => setData('birthday', date!)}
                     />
-                    {errors.birthday && <InputError id="birthday-error" message={errors.birthday} />} */}
-                    <DatePicker date={data.birthday ? new Date(data.birthday) : undefined} setDate={(date) => setData('birthday', date!)} />
                   </div>
                 </div>
               </div>
@@ -247,7 +240,6 @@ export default function ContactsCreate() {
                 <div className="space-y-2">
                   <Label htmlFor="favourite" className="text-sm font-medium">
                     <div className="flex items-center gap-2">
-                      <Heart className="h-4 w-4" />
                       Favorite
                     </div>
                   </Label>
@@ -255,7 +247,11 @@ export default function ContactsCreate() {
                     id="favourite"
                     name="favourite"
                     placeholder="e.g., Music, Sports, Reading, Cooking..."
-                    value={data.favourite.join(', ')}
+                    value={
+                      Array.isArray(data.favourite)
+                        ? data.favourite.join(', ')
+                        : JSON.parse(data.favourite || '[]').join(', ')
+                    }
                     onChange={(e) => {
                       const values = e.target.value
                         .split(',')
@@ -274,7 +270,12 @@ export default function ContactsCreate() {
               <Separator />
 
               <div className="flex items-center justify-between">
-                <Button type="button" variant="outline" onClick={() => window.history.back()} className="flex items-center gap-2 hover:bg-gray-50">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.visit(route('contacts.index'))}
+                  className="flex items-center gap-2 hover:bg-gray-50"
+                >
                   <ChevronLeft className="h-4 w-4" />
                   Back to Contacts
                 </Button>
@@ -283,12 +284,12 @@ export default function ContactsCreate() {
                   {processing || isSubmitting ? (
                     <>
                       <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      Updating...
                     </>
                   ) : (
                     <>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Create Contact
+                      Update Contact
                     </>
                   )}
                 </Button>
