@@ -21,7 +21,6 @@ const primaryNavLinks = [
   { label: "Beranda", href: "/Homepage" },
   { label: "Menu", href: "/menu" },
   { label: "Pesanan", href: "/pesanan-saya" },
-  { label: "Special Offers", href: "/offers" }, // Added from NavbarTemplate
   // { label: "Track Order", href: "/order" }, // Uncomment if needed
 ];
 
