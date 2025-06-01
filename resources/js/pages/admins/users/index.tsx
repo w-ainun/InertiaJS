@@ -30,7 +30,7 @@ export default function Users() {
             columns={columns}
             data={users.data}
             searchKey="username"
-            create="user"
+            create="users"
           />
         </div>
       </div>

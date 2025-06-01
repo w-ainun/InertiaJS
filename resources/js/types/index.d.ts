@@ -50,7 +50,7 @@ export interface Contact {
   phone: string;
   profile?: string;           // nullable di migration
   gender: 'MAN' | 'WOMAN';
-  birthday: string;           // tanggal dalam format YYYY-MM-DD
+  birthday: Date;           // tanggal dalam format YYYY-MM-DD
   favourite?: string[];       // json di-DB, map ke array
   created_at: string;         // ISO timestamp
   updated_at: string;         // ISO timestamp

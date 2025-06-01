@@ -1,4 +1,11 @@
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { BreadcrumbItem, Contact, SharedData, User } from '@/types';
+import { useForm, usePage } from '@inertiajs/react';
+import { Calendar, ChevronLeft, Heart, LoaderCircle, Phone, UserIcon, UserPlus } from 'lucide-react';
 import type React from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/elements/button';
 import Input from '@/components/elements/input';
@@ -6,19 +13,15 @@ import InputError from '@/components/elements/input-error';
 import Label from '@/components/elements/label';
 import Separator from '@/components/elements/separator';
 import AppLayout from '@/components/layouts/app-layout';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { BreadcrumbItem, Contact, SharedData, User } from '@/types';
-import { useForm, usePage } from '@inertiajs/react';
-import { Calendar, ChevronLeft, Heart, LoaderCircle, Phone, UserIcon, UserPlus } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import DatePicker from '@/components/ui/date-picker';
 
 export default function ContactsCreate() {
-  const { contacts, users, success, error } = usePage<SharedData & {
-    contacts: { data: Contact },
-    users: User[]
-  }>().props;
+  const { contacts, users, success, error } = usePage<
+    SharedData & {
+      contacts: { data: Contact };
+      users: User[];
+    }
+  >().props;
   console.log(contacts);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,7 +82,7 @@ export default function ContactsCreate() {
             </div>
             <div>
               <h1 className="text-xl font-semibold">Edit Contact</h1>
-              <p className="text-sm">Add a new contact with complete information</p>
+              <p className="text-sm">Edit the contact with complete information</p>
             </div>
           </div>
 
@@ -88,7 +91,7 @@ export default function ContactsCreate() {
               <div className="space-y-6">
                 <div className="flex items-center gap-2">
                   <UserIcon className="h-4 w-4" />
-                  <h3 className="text-lg font-medium">User Information</h3>
+                  <h3 className="text-lg font-medium">Contact Information</h3>
                 </div>
 
                 <div className="space-y-2">
@@ -174,7 +177,7 @@ export default function ContactsCreate() {
                   <RadioGroup
                     value={data.gender}
                     onValueChange={(value) => {
-                      if (value === "MAN" || value === "WOMAN") {
+                      if (value === 'MAN' || value === 'WOMAN') {
                         setData('gender', value);
                       }
                     }}
@@ -193,7 +196,7 @@ export default function ContactsCreate() {
                   </RadioGroup>
 
                   <div className="space-y-2">
-                    <Label htmlFor="birthday" className="text-sm font-medium">
+                    {/* <Label htmlFor="birthday" className="text-sm font-medium">
                       Birthday
                     </Label>
                     <Input
@@ -206,7 +209,8 @@ export default function ContactsCreate() {
                       aria-describedby={errors.birthday ? 'birthday-error' : undefined}
                       className="focus:ring-2 focus:ring-blue-500"
                     />
-                    {errors.birthday && <InputError id="birthday-error" message={errors.birthday} />}
+                    {errors.birthday && <InputError id="birthday-error" message={errors.birthday} />} */}
+                    <DatePicker date={data.birthday ? new Date(data.birthday) : undefined} setDate={(date) => setData('birthday', date!)} />
                   </div>
                 </div>
               </div>

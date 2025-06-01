@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAddressRequest;
 use App\Http\Requests\UpdateAddressRequest;
 use App\Http\Resources\AddressResource;
+use App\Http\Resources\ContactResource;
+use App\Models\Contact;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -22,7 +24,13 @@ class AdminAddressController extends Controller {
     }
 
     public function create() {
-        //
+        $contacts = Contact::withTrashed()->get();
+
+        return Inertia::render('admins/address/create', [
+            'contacts' => ContactResource::collection($contacts),
+            'success' => session('success'),
+            'error' => session('error'),
+        ]);
     }
 
     public function store(StoreAddressRequest $request) {
