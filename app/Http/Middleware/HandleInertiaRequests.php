@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use Tighten\Ziggy\Ziggy;
+use Tighten\Ziggy\Ziggy; // Jika Anda menggunakan Ziggy untuk rute
 
 class HandleInertiaRequests extends Middleware
 {
@@ -37,19 +37,36 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        // [$message, $author] = str(Inspiring::quotes()->random())->explode('-'); // Bagian quote bisa dipertahankan jika mau
 
-        return [
-            ...parent::share($request),
+        return array_merge(parent::share($request), [
             'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
+            // 'quote' => ['message' => trim($message), 'author' => trim($author)], // Opsional
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? [ // Kirim hanya data user yang relevan
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    // Tambahkan field lain jika perlu, misal role, dll.
+                ] : null,
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
-            ]
-        ];
+            ],
+            // --- TAMBAHKAN BAGIAN INI UNTUK FLASH MESSAGES DAN MIDTRANS KEY ---
+            'flash' => function () use ($request) {
+                return [
+                    'success' => $request->session()->get('success'),
+                    'error' => $request->session()->get('error'),
+                    'info' => $request->session()->get('info'),
+                    'success_payment_initiation' => $request->session()->get('success_payment_initiation'),
+                    'snap_token' => $request->session()->get('snap_token'), // Ini yang paling penting untuk alur pembayaran
+                    'snap_token_retry' => $request->session()->get('snap_token_retry'), // Jika Anda implementasi tombol coba bayar lagi
+                ];
+            },
+            'midtrans_client_key' => config('midtrans.client_key'), // Bagikan juga Midtrans Client Key
+            // --- AKHIR BAGIAN TAMBAHAN ---
+        ]);
     }
 }

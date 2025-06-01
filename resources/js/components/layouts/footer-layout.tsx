@@ -97,7 +97,6 @@ export default function FooterLayout({ className = '', ...props }: FooterLayoutP
       </main>
 
       <aside className="flex w-full flex-wrap justify-between gap-4 bg-black px-20 py-5 text-white">
-        <p>Order.uk © 2024, All rights reserved.</p>
         <nav className="flex gap-4">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms</a>

@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class ItemSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         $items = [
@@ -16,6 +19,7 @@ class ItemSeeder extends Seeder
                 'price' => 3000,
                 'image_url' => '/img/dadar-gulung.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Kue Cucur',
@@ -23,6 +27,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/cucur.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Koci-Koci',
@@ -30,6 +35,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/koci-koci.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Klepon',
@@ -37,6 +43,7 @@ class ItemSeeder extends Seeder
                 'price' => 5000,
                 'image_url' => '/img/categories/kue-basah.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Kue Lumpur',
@@ -44,6 +51,7 @@ class ItemSeeder extends Seeder
                 'price' => 2500,
                 'image_url' => '/img/kue-lumpur.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Bikang Manis',
@@ -51,6 +59,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/bikang-manis.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Kue Putu',
@@ -58,6 +67,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/kue-putu.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Lemper Ayam',
@@ -65,6 +75,7 @@ class ItemSeeder extends Seeder
                 'price' => 3000,
                 'image_url' => '/img/lemper-ayam.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Kue Nagasari',
@@ -72,6 +83,7 @@ class ItemSeeder extends Seeder
                 'price' => 2500,
                 'image_url' => '/img/kue-nagasari.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Kue Lapis',
@@ -79,6 +91,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/kue-lapis.png',
                 'category_slug' => 'kue-basah',
+                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
             ],
             [
                 'name' => 'Semprong renyah',
@@ -86,6 +99,7 @@ class ItemSeeder extends Seeder
                 'price' => 50000,
                 'image_url' => '/img/semprong-renyah.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Pastel kering',
@@ -93,6 +107,7 @@ class ItemSeeder extends Seeder
                 'price' => 50000,
                 'image_url' => '/img/pastel-kering.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Seroja/Kembang Goyang',
@@ -100,6 +115,7 @@ class ItemSeeder extends Seeder
                 'price' => 50000,
                 'image_url' => '/img/seroja.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Telur Gabus',
@@ -107,6 +123,7 @@ class ItemSeeder extends Seeder
                 'price' => 50000,
                 'image_url' => '/img/telur-gabus.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Onde-onde Ketawa',
@@ -114,6 +131,7 @@ class ItemSeeder extends Seeder
                 'price' => 50000,
                 'image_url' => '/img/onde-onde-ketawa.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Kuping Gajah',
@@ -121,6 +139,7 @@ class ItemSeeder extends Seeder
                 'price' => 50000,
                 'image_url' => '/img/kuping-gajah.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Kacang Sembunyi',
@@ -128,6 +147,7 @@ class ItemSeeder extends Seeder
                 'price' => 45000,
                 'image_url' => '/img/kacang-sembunyi.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Keripik Tempe',
@@ -135,6 +155,7 @@ class ItemSeeder extends Seeder
                 'price' => 40000,
                 'image_url' => '/img/keripik-tempe.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Kue Sus kering',
@@ -142,6 +163,7 @@ class ItemSeeder extends Seeder
                 'price' => 35000,
                 'image_url' => '/img/kue-sus-kering.png',
                 'category_slug' => 'kue-kering',
+                'expired_at' => Carbon::now()->addYears(1)->toDateString(),
             ],
             [
                 'name' => 'Lapis legit',
@@ -149,6 +171,7 @@ class ItemSeeder extends Seeder
                 'price' => 28000,
                 'image_url' => '/img/lapis-legit.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addMonths(3)->toDateString(),
             ],
             [
                 'name' => 'Donat',
@@ -156,6 +179,7 @@ class ItemSeeder extends Seeder
                 'price' => 3500,
                 'image_url' => '/img/donat.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(3)->toDateString(),
             ],
             [
                 'name' => 'Cupcake',
@@ -163,6 +187,7 @@ class ItemSeeder extends Seeder
                 'price' => 5000,
                 'image_url' => '/img/cupcake.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(3)->toDateString(),
             ],
             [
                 'name' => 'Burnt Cheesecake',
@@ -170,6 +195,7 @@ class ItemSeeder extends Seeder
                 'price' => 22000,
                 'image_url' => '/img/burn-cheesecake.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(5)->toDateString(),
             ],
             [
                 'name' => 'Brownies',
@@ -177,6 +203,7 @@ class ItemSeeder extends Seeder
                 'price' => 25000,
                 'image_url' => '/img/brownies.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(5)->toDateString(),
             ],
             [
                 'name' => 'Croissant',
@@ -184,6 +211,7 @@ class ItemSeeder extends Seeder
                 'price' => 15000,
                 'image_url' => '/img/croissant.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(2)->toDateString(),
             ],
             [
                 'name' => 'Pancake',
@@ -191,6 +219,7 @@ class ItemSeeder extends Seeder
                 'price' => 17000,
                 'image_url' => '/img/pancake.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Bolu',
@@ -198,6 +227,7 @@ class ItemSeeder extends Seeder
                 'price' => 7000,
                 'image_url' => '/img/bolu.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(4)->toDateString(),
             ],
             [
                 'name' => 'Pie',
@@ -205,6 +235,7 @@ class ItemSeeder extends Seeder
                 'price' => 40000,
                 'image_url' => '/img/pie.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(5)->toDateString(),
             ],
             [
                 'name' => 'Cinnamon Roll',
@@ -212,6 +243,7 @@ class ItemSeeder extends Seeder
                 'price' => 18000,
                 'image_url' => '/img/cinnamon-roll.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(3)->toDateString(),
             ],
             [
                 'name' => 'Waffle',
@@ -219,6 +251,7 @@ class ItemSeeder extends Seeder
                 'price' => 8000,
                 'image_url' => '/img/waffle.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(2)->toDateString(),
             ],
             [
                 'name' => 'Tiramisu cake',
@@ -226,6 +259,7 @@ class ItemSeeder extends Seeder
                 'price' => 20000,
                 'image_url' => '/img/tiramisu-cake.png',
                 'category_slug' => 'kue-modern',
+                'expired_at' => Carbon::now()->addDays(4)->toDateString(),
             ],
             [
                 'name' => 'Pastel',
@@ -233,6 +267,7 @@ class ItemSeeder extends Seeder
                 'price' => 5000,
                 'image_url' => '/img/pastel.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Bakwan',
@@ -240,6 +275,7 @@ class ItemSeeder extends Seeder
                 'price' => 1500,
                 'image_url' => '/img/bakwan.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Tahu Isi',
@@ -247,6 +283,7 @@ class ItemSeeder extends Seeder
                 'price' => 1500,
                 'image_url' => '/img/tahu-isi.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Pisang Molen',
@@ -254,6 +291,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/pisang-molen.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Cireng',
@@ -261,6 +299,7 @@ class ItemSeeder extends Seeder
                 'price' => 1000,
                 'image_url' => '/img/cireng.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Risoles',
@@ -268,6 +307,7 @@ class ItemSeeder extends Seeder
                 'price' => 5500,
                 'image_url' => '/img/risoles.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Tempe Mendoan',
@@ -275,6 +315,7 @@ class ItemSeeder extends Seeder
                 'price' => 2500,
                 'image_url' => '/img/tempe-mendoan.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Bakwan Jagung',
@@ -282,6 +323,7 @@ class ItemSeeder extends Seeder
                 'price' => 1500,
                 'image_url' => '/img/bakwan-jagung.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Pisang goreng',
@@ -289,6 +331,7 @@ class ItemSeeder extends Seeder
                 'price' => 1500,
                 'image_url' => '/img/pisang-goreng.png',
                 'category_slug' => 'gorengan',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Es Cendol',
@@ -296,6 +339,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-cendol.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Es Oyen',
@@ -303,6 +347,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-oyen.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Es Campur',
@@ -310,6 +355,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-campur.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Es Doger',
@@ -317,6 +363,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-doger.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Es Kuwut',
@@ -324,6 +371,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-kuwut.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Es Teler',
@@ -331,6 +379,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-teler.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Es Cincau',
@@ -338,6 +387,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-cincau.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Es Lilin Kacang Hijau',
@@ -345,6 +395,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-lilin-kacang-hijau.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addMonths(3)->toDateString(),
             ],
             [
                 'name' => 'Es Kopyor',
@@ -352,6 +403,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/es-kopyor.png',
                 'category_slug' => 'minuman',
+                'expired_at' => Carbon::now()->addHours(6)->toDateString(),
             ],
             [
                 'name' => 'Puding Tape',
@@ -359,6 +411,7 @@ class ItemSeeder extends Seeder
                 'price' => 5000,
                 'image_url' => '/img/puding-tape.png',
                 'category_slug' => 'puding',
+                'expired_at' => Carbon::now()->addDays(2)->toDateString(),
             ],
             [
                 'name' => 'Biji Salak',
@@ -366,6 +419,7 @@ class ItemSeeder extends Seeder
                 'price' => 7500,
                 'image_url' => '/img/biji-salak.png',
                 'category_slug' => 'puding',
+                'expired_at' => Carbon::now()->addDays(2)->toDateString(),
             ],
             [
                 'name' => 'Pisang Ijo',
@@ -373,6 +427,7 @@ class ItemSeeder extends Seeder
                 'price' => 10000,
                 'image_url' => '/img/pisang-ijo.png',
                 'category_slug' => 'puding',
+                'expired_at' => Carbon::now()->addDays(1)->toDateString(),
             ],
             [
                 'name' => 'Sagu Mutiara',
@@ -380,6 +435,7 @@ class ItemSeeder extends Seeder
                 'price' => 3500,
                 'image_url' => '/img/sagu-mutiara.png',
                 'category_slug' => 'puding',
+                'expired_at' => Carbon::now()->addDays(2)->toDateString(),
             ],
             [
                 'name' => 'Wajik Ketan',
@@ -387,6 +443,7 @@ class ItemSeeder extends Seeder
                 'price' => 4500,
                 'image_url' => '/img/wajik-ketan.png',
                 'category_slug' => 'puding',
+                'expired_at' => Carbon::now()->addDays(3)->toDateString(),
             ],
             [
                 'name' => 'Puding Karamel',
@@ -394,6 +451,7 @@ class ItemSeeder extends Seeder
                 'price' => 5000,
                 'image_url' => '/img/puding-karamel.png',
                 'category_slug' => 'puding',
+                'expired_at' => Carbon::now()->addDays(3)->toDateString(),
             ],
         ];
 
@@ -410,8 +468,9 @@ class ItemSeeder extends Seeder
                 'description' => $item['description'],
                 'price' => $item['price'],
                 'image_url' => $item['image_url'],
-                'stock' => $item['stock'] ?? 10, // Tambahkan ini
+                'stock' => $item['stock'] ?? 10,
                 'category_id' => $category->id,
+                'expired_at' => $item['expired_at'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

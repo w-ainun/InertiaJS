@@ -1,5 +1,5 @@
+// NavbarLayout.tsx
 import FigureCap from '../fragments/figcap';
-import NavbarTemplate from '../navbar-template';
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState, useEffect } from 'react';
 
@@ -15,6 +15,14 @@ type NavbarLayoutProps = {
   className?: string;
   user?: User | null;
 };
+
+// Define your navigation links here
+const primaryNavLinks = [
+  { label: "Beranda", href: "/Homepage" },
+  { label: "Menu", href: "/menu" },
+  { label: "Pesanan", href: "/pesanan-saya" },
+  // { label: "Track Order", href: "/order" }, // Uncomment if needed
+];
 
 export default function NavbarLayout({ className = "", user: initialUser = null }: NavbarLayoutProps) {
   const { url } = usePage();
@@ -34,64 +42,52 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
     router.post('/logout');
   };
 
+  // Helper function for consistent link styling
+  const getLinkClasses = (href: string) => {
+    // Check for exact match or startsWith for nested routes (e.g., /menu/item1)
+    const isActive = url === href || (href !== '/' && url.startsWith(href + '/'));
+    if (href === '/Homepage' && url === '/') { // Special case for homepage if your root is '/'
+      return "bg-[#028643] text-white";
+    }
+
+    return `flex items-center rounded-full px-6 py-1 font-medium transition-colors duration-200 ${
+      isActive
+        ? "bg-[#028643] text-white"
+        : "bg-gray-200 text-black hover:bg-[#028643] hover:text-white"
+    }`;
+  };
+
   return (
     <section aria-label="navigation" className={`flex justify-between items-center ${className}`}>
-      <FigureCap src="RB-Store1.png" alt="" className="w-72" />
-
+      <FigureCap src="/RB-Store1.png" alt="RB Store Logo" className="w-72" />
       <div className="flex items-center gap-6">
-        <NavbarTemplate />
-          {/* guna activatepage untuk ketika berada dihalaman yang sesuai navbar tombol otomatis ganti backgroundnya */}
         <div className="flex gap-4">
+          {primaryNavLinks.map(({ label, href }) => (
             <Link
-              href="/Homepage" 
-              className={`flex items-center rounded-full px-6 py-1 font-medium transition-colors duration-200 ${
-                activePage === "/Homepage"
-                  ? "bg-[#028643] text-white"
-                  : "bg-gray-200 text-black hover:bg-[#028643] hover:text-white"
-              }`}
+              key={href}
+              href={href}
+              className={getLinkClasses(href)}
             >
-              Beranda
+              {label}
             </Link>
-
-            <Link
-              href="/menu"
-              className={`flex items-center rounded-full px-8 py-3 font-medium transition-colors duration-200 ${
-                activePage.startsWith("/Menu")
-                  ? "bg-[#028643] text-white"
-                  : "bg-gray-200 text-black hover:bg-[#028643] hover:text-white"
-              }`}
-            >
-              Menu
-            </Link>
-
-            <Link
-              href="/Pesanan"
-              className={`flex items-center rounded-full px-6 py-1 font-medium transition-colors duration-200 ${
-                activePage.startsWith("/pesanan")
-                  ? "bg-[#028643] text-white"
-                  : "bg-gray-200 text-black hover:bg-[#028643] hover:text-white"
-              }`}
-            >
-              Pesanan
-            </Link>
-          
+          ))}
         </div>
 
         <div className="flex items-center rounded-4xl bg-black px-6 py-3 text-white ml-4">
           {!user ? (
             <>
-              <img src="/svg/male.svg" alt="user" className="pr-2 h-6 w-6" />
+              <img src="/svg/male.svg" alt="user icon" className="pr-2 h-6 w-6" />
               <Link href="/login" className="hover:underline">Login</Link>
               <span className="px-1">/</span>
               <Link href="/register" className="hover:underline">Register</Link>
             </>
           ) : (
             <>
-              <img src="/svg/male.svg" alt="user" className="pr-2 h-6 w-6" />
-              <Link href={route('profile.show')} className="hover:underline"> {/* Diubah */}
+              <img src="/svg/male.svg" alt="user icon" className="pr-2 h-6 w-6" />
+              <Link href={route('profile.show')} className="hover:underline">
                 Halo, {user.username}
               </Link>
-              {/* <button onClick={handleLogout} className="ml-4 underline">Logout</button> */}
+              <button onClick={handleLogout} className="ml-4 underline">Logout</button>
             </>
           )}
         </div>

@@ -1,31 +1,77 @@
+// PesananSaya.tsx
+
 import React, { useState } from 'react';
-import { ShoppingCart, User, Clock, ChevronLeft, Package, Truck, CheckCircle, DollarSign } from 'lucide-react';
+import { ShoppingCart, User as UserIconLucide, Clock, ChevronLeft, Package, Truck, CheckCircle, DollarSign, AlertCircle, XCircle, Archive } from 'lucide-react';
+import AppTemplate from "@/components/templates/app-template";
+import { usePage, router } from '@inertiajs/react';
+import { PageProps as InertiaBasePageProps } from '@inertiajs/core'; // Import base PageProps
 
-interface PesananSayaProps {
-  user?: {
-    name: string;
-  };
-  cartItems?: {
-    count: number;
-    total: number;
-  };
-}
-
-interface TransactionItem {
+// --- User Interface (ensure this matches what's shared via HandleInertiaRequests) ---
+interface User {
   id: number;
-  date: string;
-  time: string;
-  item: string;
-  category: string;
-  quantity: number;
-  price: number; // Unit price
-  image: string;
+  username: string;
+  email: string;
+  // role: 'ADMIN' | 'CLIENT' | 'COURIER'; // Defined in your original code
+  // status: 'active' | 'inactive'; // Defined in your original code
+  avatar?: string | null;
+  contact?: {
+    phone?: string | null;
+    addresses?: BackendAddress[]; // Or however addresses are structured if shared on user
+  };
+  // Add other fields if accessed directly from auth.user in this component
 }
 
+interface AuthProps { // Define a type for the 'auth' shared prop
+    user: User | null;
+    // Include any other properties shared under 'auth'
+}
+
+// --- Backend Data Structures (as previously defined) ---
+interface BackendItem {
+  id: number;
+  name: string;
+}
+
+interface BackendTransactionDetail {
+  id: number;
+  item: BackendItem;
+  quantity: number;
+  price_at_time: string;
+  discount_percentage_at_time: number | null;
+}
+
+interface BackendAddress {
+  id: number;
+  street: string;
+  more?: string | null;
+  city: string;
+  province: string;
+  post_code: string;
+  country: string;
+}
+
+interface BackendTransaction {
+  id: number;
+  order_number_display: string;
+  client_id: number;
+  total: string;
+  note?: string | null;
+  payment_method: string;
+  status: 'pending' | 'paid' | 'settlement' | 'capture' | 'challenge' | 'deny' | 'expire' | 'cancel' | 'failed' | 'dikemas' | 'dalam_pengiriman' | 'diterima' | 'selesai' | string;
+  delivery_option: 'delivery' | 'pickup';
+  shipping_cost: string;
+  address_id?: number | null;
+  address?: BackendAddress | null;
+  details: BackendTransactionDetail[];
+  created_at: string;
+  updated_at: string;
+}
+
+// --- Frontend Display Structures (as previously defined) ---
 interface DeliveryOrderItem {
   name: string;
   quantity: number;
-  price: number; // Unit price
+  price: number;
 }
 
 interface DeliveryOrder {
@@ -33,334 +79,523 @@ interface DeliveryOrder {
   orderNumber: string;
   service: string;
   courier: string;
-  status: 'selesai' | 'diterima' | 'dalam_pengiriman' | 'dikemas' | 'lunas';
+  status: BackendTransaction['status'];
   statusTime: string;
   items: DeliveryOrderItem[];
   total: number;
+  deliveryOption?: 'delivery' | 'pickup';
+  shippingAddress?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  paymentMethod?: string;
+  shippingCost?: number;
+  rawCreatedAt: string;
+  rawUpdatedAt: string;
 }
 
-const PesananSaya: React.FC<PesananSayaProps> = ({
-  user = { name: 'Seinal Arifin' },
-  cartItems = { count: 23, total: 100000 },
-}) => {
+// --- Corrected Page Props Interface ---
+// This interface now extends InertiaBasePageProps and includes 'auth'
+interface PesananSayaPageProps extends InertiaBasePageProps {
+  activeOrders: BackendTransaction[];
+  historicalOrders: BackendTransaction[];
+  auth: AuthProps; // 'auth' is a standard shared prop from HandleInertiaRequests
+  // flash?: { success?: string; error?: string; /* ... */ }; // Add if you use flash messages directly here
+  // errors?: Record<string, string>; // Add if you use shared errors directly here
+}
+
+
+const PesananSaya: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'pesanan' | 'riwayat'>('pesanan');
-  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  // --- Updated Menu Data (as per previous changes based on images) ---
-  const deliveryOrdersData: Omit<DeliveryOrder, 'total'>[] = [
-    {
-      id: '1',
-      orderNumber: 'RB-254083772-AKYTRE',
-      service: 'Jasa Kirim Instan',
-      courier: 'KURIR TOKO',
-      status: 'selesai',
-      statusTime: '21 April 2025 - 21:44 wib',
-      items: [
-        { name: 'Bakwan Sayur', quantity: 3, price: 2500 },
-        { name: 'Es Teh Manis', quantity: 1, price: 5000 }
-      ],
-    },
-    {
-      id: '2',
-      orderNumber: 'RB-254083773-BKLMN',
-      service: 'Pengiriman Terjadwal',
-      courier: 'KURIR TOKO',
-      status: 'dalam_pengiriman',
-      statusTime: '25 May 2025 - 14:30 wib',
-      items: [
-        { name: 'Kue Lumpur', quantity: 2, price: 5000 },
-        { name: 'Dadar Gulung', quantity: 2, price: 4000 },
-        { name: 'Jus Alpukat', quantity: 1, price: 15000 }
-      ],
-    },
-    {
-      id: '3',
-      orderNumber: 'RB-254083774-CDEFG',
-      service: 'Jasa Kirim Hemat',
-      courier: 'KURIR TOKO',
-      status: 'dikemas',
-      statusTime: '25 May 2025 - 15:15 wib',
-      items: [
-        { name: 'Brownies Slice', quantity: 1, price: 15000 },
-        { name: 'Es Kopi Susu', quantity: 1, price: 18000 }
-      ],
-    },
-    {
-      id: '4',
-      orderNumber: 'RB-254083775-HIJKL',
-      service: 'Ambil Sendiri',
-      courier: 'DIAMBIL PELANGGAN',
-      status: 'diterima',
-      statusTime: '25 May 2025 - 16:00 wib',
-      items: [
-        { name: 'Red Velvet Slice', quantity: 1, price: 25000 },
-        { name: 'Donat Karakter', quantity: 2, price: 8000 },
-        { name: 'Thai Tea', quantity: 1, price: 12000 }
-      ],
-    }
-  ];
+  // Use the corrected PesananSayaPageProps with usePage
+  const page = usePage<PesananSayaPageProps>();
+  const { activeOrders: rawActiveOrders, historicalOrders: rawHistoricalOrders, auth } = page.props;
+  const authUser = auth.user; // Now authUser is correctly typed based on AuthProps
 
-  const deliveryOrders: DeliveryOrder[] = deliveryOrdersData.map(order => ({
-    ...order,
-    total: order.items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
-  }));
+  // ... rest of your component logic (formatCurrency, formatDate, transformTransactionToDisplayOrder, etc.) ...
+  // No changes needed for the rest of the component's internal logic from the previous answer.
 
-  const transactionHistory: TransactionItem[] = [
-    {
-      id: 1, date: '05 Mar 2025', time: '09.45 WIB', item: 'Klepon', category: 'Kue Basah',
-      quantity: 3, price: 3000, image: '/img/klepon_placeholder.jpg',
-    },
-    {
-      id: 2, date: '06 Mar 2025', time: '14.20 WIB', item: 'Tahu Isi Pedas', category: 'Gorengan',
-      quantity: 2, price: 3000, image: '/img/tahu_isi_placeholder.jpg',
-    },
-    {
-      id: 3, date: '07 Mar 2025', time: '19.00 WIB', item: 'Puding Coklat Cup', category: 'Puding',
-      quantity: 1, price: 15000, image: '/img/puding_coklat_placeholder.jpg',
-    }
-  ];
-  // --- End of Updated Menu Data ---
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'selesai': return <Package className="w-6 h-6 text-green-600" />;
-      case 'diterima': return <CheckCircle className="w-6 h-6 text-green-600" />;
-      case 'dalam_pengiriman': return <Truck className="w-6 h-6 text-green-600" />;
-      case 'dikemas': return <Package className="w-6 h-6 text-green-600" />;
-      case 'lunas': return <DollarSign className="w-6 h-6 text-green-600" />;
-      default: return <Package className="w-6 h-6 text-gray-400" />; // Fallback icon
-    }
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount).replace(/\s*IDR\s*/, 'Rp ');
   };
 
-  const getStatusText = (status: string) => {
-    // This function remains useful for displaying status text in order cards
-    switch (status) {
-      case 'selesai': return 'Selesai';
-      case 'diterima': return 'Diterima';
-      case 'dalam_pengiriman': return 'Dalam Pengiriman';
-      case 'dikemas': return 'Dikemas';
-      case 'lunas': return 'Lunas';
-      default: return status;
-    }
+  const formatDate = (dateString: string, options?: Intl.DateTimeFormatOptions): string => {
+    const defaultOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
+    };
+    return new Date(dateString).toLocaleString('id-ID', { ...defaultOptions, ...options });
   };
 
-  // Reverted getTrackingSteps to simpler version (as per original user code structure)
-  const getTrackingSteps = (status: string, orderNumber: string) => {
-    const baseSteps = [
-      { status: 'lunas', label: 'Lunas', time: '' },
-      { status: 'dikemas', label: 'Dikemas', time: '' },
-      { status: 'dalam_pengiriman', label: 'Dalam Pengiriman', time: '' },
-      { status: 'diterima', label: 'Diterima', time: '' },
-      { status: 'selesai', label: 'Selesai', time: '' }
-    ];
+  const transformTransactionToDisplayOrder = (transaction: BackendTransaction): DeliveryOrder => {
+    const items = transaction.details.map(detail => {
+      const originalPrice = parseFloat(detail.price_at_time);
+      const discount = detail.discount_percentage_at_time || 0;
+      const priceAfterDiscount = originalPrice * (1 - discount / 100);
+      return {
+        name: detail.item.name,
+        quantity: detail.quantity,
+        price: priceAfterDiscount,
+      };
+    });
 
-    // Different tracking data based on orderNumber (status argument is not used by this switch)
-    switch (orderNumber) {
-      case 'RB-254083772-AKYTRE':
-        return [
-          { status: 'selesai', label: 'Selesai', time: '21 April 2025 - 21:44 wib' },
-          { status: 'diterima', label: 'Diterima', time: '21 April 2025 - 21:30 wib' },
-          { status: 'dalam_pengiriman', label: 'Dalam Pengiriman', time: '21 April 2025 - 21:15 wib' },
-          { status: 'dikemas', label: 'Dikemas', time: '21 April 2025 - 21:10 wib' },
-          { status: 'lunas', label: 'Lunas', time: '21 April 2025 - 21:00 wib' }
-        ];
-      case 'RB-254083773-BKLMN':
-        return [
-          { status: 'dalam_pengiriman', label: 'Dalam Pengiriman', time: '25 May 2025 - 14:30 wib' },
-          { status: 'dikemas', label: 'Dikemas', time: '25 May 2025 - 14:15 wib' },
-          { status: 'lunas', label: 'Lunas', time: '25 May 2025 - 14:00 wib' }
-        ];
-      case 'RB-254083774-CDEFG':
-        return [
-          { status: 'dikemas', label: 'Dikemas', time: '25 May 2025 - 15:15 wib' },
-          { status: 'lunas', label: 'Lunas', time: '25 May 2025 - 15:00 wib' }
-        ];
-      case 'RB-254083775-HIJKL':
-        return [
-          { status: 'diterima', label: 'Diterima', time: '25 May 2025 - 16:00 wib' },
-          { status: 'dalam_pengiriman', label: 'Dalam Pengiriman', time: '25 May 2025 - 15:45 wib' },
-          { status: 'dikemas', label: 'Dikemas', time: '25 May 2025 - 15:30 wib' },
-          { status: 'lunas', label: 'Lunas', time: '25 May 2025 - 15:15 wib' }
-        ];
+    let service = 'Tidak Diketahui';
+    let courier = '-';
+    if (transaction.delivery_option === 'delivery') {
+      service = 'Pengiriman ke Alamat';
+      courier = 'KURIR TOKO';
+    } else if (transaction.delivery_option === 'pickup') {
+      service = 'Ambil Sendiri';
+      courier = 'DIAMBIL PELANGGAN';
+    }
+
+    let shippingAddressSummary = null;
+    if (transaction.delivery_option === 'delivery' && transaction.address) {
+        const addr = transaction.address;
+        shippingAddressSummary = [addr.street, addr.more, addr.city, addr.province, addr.post_code, addr.country].filter(Boolean).join(', ');
+    }
+
+    return {
+      id: String(transaction.id),
+      orderNumber: transaction.order_number_display,
+      service,
+      courier,
+      status: transaction.status,
+      statusTime: formatDate(transaction.updated_at),
+      items,
+      total: parseFloat(transaction.total),
+      deliveryOption: transaction.delivery_option,
+      shippingAddress: shippingAddressSummary,
+      notes: transaction.note || null,
+      createdAt: formatDate(transaction.created_at),
+      updatedAt: formatDate(transaction.updated_at),
+      paymentMethod: transaction.payment_method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      shippingCost: parseFloat(transaction.shipping_cost),
+      rawCreatedAt: transaction.created_at,
+      rawUpdatedAt: transaction.updated_at,
+    };
+  };
+
+  const activeDisplayOrders: DeliveryOrder[] = rawActiveOrders.map(transformTransactionToDisplayOrder);
+  const historicalDisplayOrders: DeliveryOrder[] = rawHistoricalOrders.map(transformTransactionToDisplayOrder);
+
+  const selectedOrderData = selectedOrderId
+    ? [...activeDisplayOrders, ...historicalDisplayOrders].find(o => o.id === selectedOrderId)
+    : null;
+
+  const getStatusIcon = (status: DeliveryOrder['status']) => {
+    switch (status) {
+      case 'selesai':
+      case 'diterima':
+      case 'paid':
+      case 'settlement':
+        return <CheckCircle className="w-6 h-6 text-green-600" />;
+      case 'dalam_pengiriman':
+        return <Truck className="w-6 h-6 text-blue-600" />;
+      case 'dikemas':
+        return <Package className="w-6 h-6 text-indigo-600" />;
+      case 'pending':
+      case 'capture':
+      case 'challenge':
+        return <Clock className="w-6 h-6 text-yellow-500" />;
+      case 'lunas':
+        return <DollarSign className="w-6 h-6 text-green-600" />;
+      case 'failed':
+      case 'deny':
+        return <XCircle className="w-6 h-6 text-red-600" />;
+      case 'canceled':
+      case 'expired':
+        return <Archive className="w-6 h-6 text-gray-500" />;
       default:
-        // For unknown orderNumbers, return baseSteps (all steps with empty times).
-        // This mirrors the behavior of the original code structure.
-        return baseSteps;
+        return <Package className="w-6 h-6 text-gray-400" />;
     }
   };
 
-  // This was how trackingSteps was defined in the original code structure.
-  // It's calculated regardless of whether an order is selected, then used if an order is selected.
-  const orderDataForTracking = selectedOrder ? deliveryOrders.find(o => o.id === selectedOrder) : null;
-  const trackingStepsToDisplay = getTrackingSteps(
-    orderDataForTracking?.status || '', 
-    orderDataForTracking?.orderNumber || ''
-  );
+  const getStatusText = (status: DeliveryOrder['status']) => {
+    const statusMap: Record<string, string> = {
+      'pending': 'Menunggu Pembayaran',
+      'paid': 'Lunas',
+      'settlement': 'Lunas (Settlement)',
+      'capture': 'Pembayaran Diproses',
+      'challenge': 'Pembayaran Ditinjau',
+      'deny': 'Pembayaran Ditolak',
+      'expire': 'Kadaluarsa',
+      'cancel': 'Dibatalkan',
+      'failed': 'Gagal',
+      'dikemas': 'Dikemas',
+      'dalam_pengiriman': 'Dalam Pengiriman',
+      'diterima': 'Diterima Pelanggan',
+      'selesai': 'Selesai',
+    };
+    return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
+  };
 
-  if (selectedOrder) {
-    const order = deliveryOrders.find(o => o.id === selectedOrder);
-    if (order) {
-      // Note: trackingStepsToDisplay is used here, which is defined outside this block.
-      return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
-          {/* Promo Banner and Header (No changes here) */}
-          <div className="bg-white py-1 px-4 flex justify-between items-center border-b"> {/* Promo */}
-            <div className="flex items-center"> <span className="text-yellow-400 mr-2">✨</span> <span className="text-sm"> dapatkan diskon 5% pada pembelian pertama, Promo: ORDER5 </span> </div>
-            <div className="flex items-center"> <span className="mr-1">📍</span> <span className="text-sm">Jl. Telang Indah Barat, Bangkalan</span> <span className="text-green-600 text-sm ml-1 cursor-pointer"> Change Location </span> </div>
-          </div>
-          <header className="bg-white p-4 flex justify-between items-center border-b"> {/* Header */}
-            <div className="text-3xl font-bold text-green-800">RB Store</div>
-            <div className="flex items-center space-x-4"> <a href="#" className="text-gray-700">Beranda</a> <a href="#" className="text-gray-700">Lihat Menu</a> <button className="bg-green-700 text-white px-4 py-2 rounded"> Pesanan Saya </button> <div className="flex items-center ml-2 bg-gray-900 text-white px-4 py-2 rounded"> <User size={18} className="mr-2" /> <span>{user.name}</span> </div> </div>
-          </header>
+  const getDynamicTrackingSteps = (order: DeliveryOrder | null) => {
+    if (!order) return [];
 
-          {/* Page Title */}
-          <div className="bg-green-700 text-white py-6 relative">
-            <div className="px-4 flex items-center">
-              <ChevronLeft 
-                size={24} 
-                className="cursor-pointer absolute left-4" 
-                onClick={() => setSelectedOrder(null)}
-              />
-              <h1 className="text-2xl font-bold text-center w-full">Pengiriman</h1>
-            </div>
-          </div>
+    const steps: Array<{ status: string; label: string; time: string; active: boolean; isCurrent: boolean }> = [];
+    const { status: currentStatus, rawCreatedAt, rawUpdatedAt, paymentMethod } = order;
 
-          {/* Delivery Details */}
-          <div className="w-full mt-8 px-4 space-y-6">
-            {/* Order Info (No changes here) */}
-            <div className="bg-white rounded-lg p-6 shadow">
-              <div className="mb-4"> <h2 className="text-lg font-medium mb-2">No. Pengiriman :</h2> <p className="text-gray-600 text-lg">{order.orderNumber}</p> </div>
-              <div className="flex justify-between items-center"> <div> <h3 className="text-xl font-medium">{order.service}</h3> </div> <div className="text-right"> <span className="text-lg font-medium">{order.courier}</span> </div> </div>
-            </div>
-
-            {/* Tracking Steps - Reverted to simpler JSX */}
-            <div className="bg-white rounded-lg p-6 shadow">
-              <h3 className="text-lg font-medium mb-4">Status Pengiriman</h3>
-              <div className="space-y-6">
-                {trackingStepsToDisplay.map((step, index) => (
-                  <div key={step.status + index} className="flex items-start"> {/* Using status + index for a more robust key */}
-                    <div className="flex flex-col items-center mr-4">
-                      {/* Icon background is always green-100 as in simpler versions */}
-                      <div className="bg-green-100 p-3 rounded-full"> 
-                        {getStatusIcon(step.status)} {/* Icon based directly on step.status */}
-                      </div>
-                      {/* Connector line is always gray */}
-                      {index < trackingStepsToDisplay.length - 1 && (
-                        <div className="w-px h-12 bg-gray-200 mt-2"></div>
-                      )}
-                    </div>
-                    <div className="flex-grow">
-                      {/* Text styling is not conditional based on completion */}
-                      <h4 className="text-lg font-medium">{step.label}</h4>
-                      <p className="text-gray-600">{step.time}</p> {/* Shows time if available, otherwise empty */}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Order Items Detail (No changes here, kept unit price display) */}
-            <div className="bg-white rounded-lg p-6 shadow">
-              <h3 className="text-lg font-medium mb-4">Detail Pesanan</h3>
-              <div className="space-y-4">
-                {order.items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mr-4"> <Package size={20} className="text-gray-400" /> </div>
-                      <div> <h4 className="font-medium">{item.name}</h4> <p className="text-sm text-gray-600">Qty: {item.quantity}</p> </div>
-                    </div>
-                    <div className="text-right"> <p className="font-medium">Rp. {(item.price * item.quantity).toLocaleString()}</p> <p className="text-xs text-gray-500">(@ Rp. {item.price.toLocaleString()})</p> </div>
-                  </div>
-                ))}
-                <div className="pt-4 border-t"> <div className="flex justify-between items-center"> <span className="text-lg font-medium">Total Pesanan</span> <span className="text-xl font-bold text-green-600">Rp. {order.total.toLocaleString()}</span> </div> </div>
-              </div>
-            </div>
-
-            {/* Customer Info (No changes here) */}
-            <div className="bg-white rounded-lg p-6 shadow">
-              <h3 className="text-lg font-medium mb-4">Informasi Pengiriman</h3>
-              <div className="space-y-3"> <div> <p className="text-sm text-gray-600">Nama Penerima</p> <p className="font-medium">{user.name}</p> </div> <div> <p className="text-sm text-gray-600">Alamat</p> <p className="font-medium">Jl. Telang Indah Barat, Bangkalan</p> </div> <div> <p className="text-sm text-gray-600">Kurir</p> <p className="font-medium">{order.courier}</p> </div> </div>
-            </div>
-          </div>
-
-          {/* Footer (No changes here) */}
-          <footer className="bg-gray-200 py-10 mt-10"> <div className="px-4"> <div className="grid grid-cols-1 md:grid-cols-3 gap-8"> <div> <div className="text-3xl font-bold text-green-800 mb-4">RB Store</div> <p className="text-sm text-gray-600"> Company # 490039-445, Registered with House of companies. </p> </div> <div> <p className="mb-4 font-medium">dapatkan penawaran special</p> <div className="flex"> <input type="email" placeholder="youremail@gmail.com" className="px-4 py-2 border rounded-l w-full" /> <button className="bg-green-700 text-white px-4 py-2 rounded-r"> Subscribe </button> </div> <p className="text-xs mt-2 text-gray-600"> we want spam, read our email policy </p> </div> <div className="grid grid-cols-2"> <div> <p className="font-medium mb-3">Legal Pages</p> <ul className="space-y-2 text-sm"> <li><a href="#" className="hover:text-green-700">Terms and conditions</a></li> <li><a href="#" className="hover:text-green-700">Privacy</a></li> <li><a href="#" className="hover:text-green-700">Cookies</a></li> <li><a href="#" className="hover:text-green-700">Modern Slavery Statement</a></li> </ul> </div> <div> <p className="font-medium mb-3">Important Links</p> <ul className="space-y-2 text-sm"> <li><a href="#" className="hover:text-green-700">Get help</a></li> </ul> </div> </div> </div> </div> </footer>
-          <div className="bg-gray-900 text-white py-3"> <div className="px-4 flex flex-wrap justify-between text-sm"> <span>Privacy Policy</span> <span>Terms</span> <span>Pricing</span> <span>Do not sell or share my personal information</span> </div> </div>
-        </div>
-      );
+    const paidStatuses: BackendTransaction['status'][] = ['paid', 'settlement', 'dikemas', 'dalam_pengiriman', 'diterima', 'selesai'];
+    if (paidStatuses.includes(currentStatus) || (currentStatus === 'pending' && paymentMethod === 'free_order')) {
+        let paidTime = rawCreatedAt;
+        if (currentStatus === 'paid' || currentStatus === 'settlement') {
+            paidTime = rawUpdatedAt;
+        }
+        steps.push({ status: 'lunas', label: 'Lunas', time: formatDate(paidTime), active: true, isCurrent: currentStatus === 'paid' || currentStatus === 'settlement' });
+    } else if (currentStatus === 'pending') {
+         steps.push({ status: 'pending', label: 'Menunggu Pembayaran', time: formatDate(rawUpdatedAt), active: true, isCurrent: true });
     }
-    return <div>Order not found. <button onClick={() => setSelectedOrder(null)} className="text-blue-500">Back to list</button></div>;
-  }
 
-  // Main view (Order list / Transaction History tabs)
-  // (No changes to this outer structure, only data within if it were affected by tracking logic)
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Promo Banner and Header (No changes here) */}
-      <div className="bg-white py-1 px-4 flex justify-between items-center border-b"> {/* Promo */}
-            <div className="flex items-center"> <span className="text-yellow-400 mr-2">✨</span> <span className="text-sm"> dapatkan diskon 5% pada pembelian pertama, Promo: ORDER5 </span> </div>
-            <div className="flex items-center"> <span className="mr-1">📍</span> <span className="text-sm">Jl. Telang Indah Barat, Bangkalan</span> <span className="text-green-600 text-sm ml-1 cursor-pointer"> Change Location </span> </div>
-          </div>
-      <header className="bg-white p-4 flex justify-between items-center border-b"> {/* Header */}
-        <div className="text-3xl font-bold text-green-800">RB Store</div>
-        <div className="flex items-center space-x-4"> <a href="#" className="text-gray-700">Beranda</a> <a href="#" className="text-gray-700">Lihat Menu</a> <button className="bg-green-700 text-white px-4 py-2 rounded"> Pesanan Saya </button> <div className="flex items-center ml-2 bg-gray-900 text-white px-4 py-2 rounded"> <User size={18} className="mr-2" /> <span>{user.name}</span> </div> </div>
-      </header>
+    const packedStatuses: BackendTransaction['status'][] = ['dikemas', 'dalam_pengiriman', 'diterima', 'selesai'];
+    if (packedStatuses.includes(currentStatus)) {
+      steps.push({ status: 'dikemas', label: 'Dikemas', time: currentStatus === 'dikemas' ? formatDate(rawUpdatedAt) : 'Sesuai jadwal', active: true, isCurrent: currentStatus === 'dikemas' });
+    }
 
-      {/* Main Content Area for Tabs */}
-      <div className="flex-grow">
-        {/* Page Title for Tabs */}
+    const shippedStatuses: BackendTransaction['status'][] = ['dalam_pengiriman', 'diterima', 'selesai'];
+    if (order.deliveryOption === 'delivery' && shippedStatuses.includes(currentStatus)) {
+      steps.push({ status: 'dalam_pengiriman', label: 'Dalam Pengiriman', time: currentStatus === 'dalam_pengiriman' ? formatDate(rawUpdatedAt) : 'Sesuai jadwal', active: true, isCurrent: currentStatus === 'dalam_pengiriman' });
+    }
+
+    if (currentStatus === 'diterima' || currentStatus === 'selesai') {
+      const label = order.deliveryOption === 'pickup' && currentStatus === 'diterima' ? 'Siap Diambil / Diterima' : (currentStatus === 'diterima' ? 'Diterima Pelanggan' : 'Selesai');
+      steps.push({ status: currentStatus, label: label, time: formatDate(rawUpdatedAt), active: true, isCurrent: true });
+    }
+    
+    if (['failed', 'canceled', 'expired', 'deny'].includes(currentStatus)){
+        steps.push({ status: currentStatus, label: getStatusText(currentStatus), time: formatDate(rawUpdatedAt), active: true, isCurrent: true });
+    }
+
+    const activeOrCurrentLabels = new Set(steps.map(s => s.label));
+    const baseLabelsBeforeCurrent: Record<string, string[]> = {
+        'selesai': ['Lunas', 'Dikemas', order.deliveryOption === 'delivery' ? 'Dalam Pengiriman' : undefined, 'Diterima Pelanggan'].filter(Boolean) as string[],
+        'diterima': ['Lunas', 'Dikemas', order.deliveryOption === 'delivery' ? 'Dalam Pengiriman' : undefined].filter(Boolean) as string[],
+        'dalam_pengiriman': ['Lunas', 'Dikemas'],
+        'dikemas': ['Lunas'],
+    };
+
+    const precedingStepsForCurrent = baseLabelsBeforeCurrent[currentStatus as keyof typeof baseLabelsBeforeCurrent] || [];
+    
+    precedingStepsForCurrent.forEach(label => {
+        if(!activeOrCurrentLabels.has(label)){
+            const statusKey = Object.keys(baseLabelsBeforeCurrent).find(key => baseLabelsBeforeCurrent[key as keyof typeof baseLabelsBeforeCurrent].includes(label)) || 'lunas';
+             steps.unshift({status: statusKey, label: label, time: "Sesuai jadwal", active: true, isCurrent: false });
+        }
+    });
+    
+    const uniqueSteps = Array.from(new Map(steps.map(step => [step.label, step])).values())
+                           .sort((a,b) => {
+                               const orderSort = ['Pesanan Dibuat', 'Menunggu Pembayaran', 'Lunas', 'Dikemas', 'Dalam Pengiriman', 'Diterima Pelanggan', 'Siap Diambil / Diterima', 'Selesai'];
+                               return orderSort.indexOf(a.label) - orderSort.indexOf(b.label);
+                           });
+
+    return uniqueSteps;
+  };
+
+  // The rest of the JSX (return statement) remains the same as in the previous response.
+  // Ensure you copy the full JSX for the component from the previous correct answer.
+  // This response focuses only on the TypeScript interface and usePage correction.
+
+  if (selectedOrderId && selectedOrderData) {
+    const orderForDetail = selectedOrderData;
+    const trackingStepsToDisplay = getDynamicTrackingSteps(orderForDetail);
+
+    return (
+      <AppTemplate>
         <div className="bg-green-700 text-white py-6 relative">
           <div className="px-4 flex items-center">
-            <ChevronLeft size={24} className="cursor-pointer absolute left-4" />
-            <h1 className="text-2xl font-bold text-center w-full">
-              {activeTab === 'pesanan' ? 'Pesanan Saya' : 'Transaksi Saya'}
-            </h1>
+            <ChevronLeft size={24} className="cursor-pointer absolute left-4" onClick={() => setSelectedOrderId(null)} />
+            <h1 className="text-2xl font-bold text-center w-full">Detail Pesanan</h1>
           </div>
         </div>
 
-        {/* Tabs and Content Container */}
-        <div className="w-full mt-8 px-4">
-          <div className="flex border-b"> {/* Tabs */}
-            <div className="flex items-center mb-4 cursor-pointer mr-8" onClick={() => setActiveTab('pesanan')}> <div className="p-2 rounded-full border mr-3"> <ShoppingCart size={24} className={ activeTab === 'pesanan' ? 'text-green-600' : 'text-gray-500' } /> </div> <span className={`text-xl font-medium ${ activeTab === 'pesanan' ? 'text-green-600 border-b-2 border-green-600 pb-1' : 'text-gray-500' }`}> Pesanan </span> </div>
-            <div className="flex items-center mb-4 cursor-pointer" onClick={() => setActiveTab('riwayat')}> <div className="p-2 rounded-full border mr-3"> <Clock size={24} className={ activeTab === 'riwayat' ? 'text-green-600' : 'text-gray-500' } /> </div> <span className={`text-xl font-medium ${ activeTab === 'riwayat' ? 'text-green-600 border-b-2 border-green-600 pb-1' : 'text-gray-500' }`}> Riwayat Transaksi </span> </div>
+        <div className="w-full mt-8 px-4 space-y-6 pb-8">
+          <div className="bg-white rounded-lg p-6 shadow">
+            <div className="mb-4">
+              <h2 className="text-lg font-medium mb-1">No. Pesanan:</h2>
+              <p className="text-gray-800 text-lg font-semibold">{orderForDetail.orderNumber}</p>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center">
+              <div>
+                <h3 className="text-xl font-medium text-green-700">{orderForDetail.service}</h3>
+                <p className="text-sm text-gray-500">Kurir: {orderForDetail.courier}</p>
+              </div>
+              <div className="text-left sm:text-right mt-2 sm:mt-0">
+                <div className="flex items-center justify-start sm:justify-end">
+                    {getStatusIcon(orderForDetail.status)}
+                    <span className="ml-2 text-gray-700 font-medium">
+                        {getStatusText(orderForDetail.status)}
+                    </span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Update Terakhir: {orderForDetail.statusTime}</p>
+              </div>
+            </div>
+             <div className="mt-3 text-sm">
+                <p><span className="text-gray-500">Tanggal Pesan:</span> {orderForDetail.createdAt}</p>
+                <p><span className="text-gray-500">Metode Pembayaran:</span> {orderForDetail.paymentMethod}</p>
+            </div>
           </div>
 
-          {/* Tab Content */}
-          <div className="mt-6">
-            {activeTab === 'pesanan' && ( /* Pesanan Tab Content */
-              <div className="space-y-4">
-                {deliveryOrders.length > 0 ? (
-                  deliveryOrders.map((order) => (
-                    <div key={order.id} className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedOrder(order.id)}>
-                      <div className="p-4 border-b bg-gray-50"> <div className="flex justify-between items-center"> <div> <p className="text-sm text-gray-600">No. Pesanan</p> <p className="font-medium">{order.orderNumber}</p> </div> <div className="text-right"> <div className="flex items-center"> {getStatusIcon(order.status)} <span className="ml-2 text-green-600 font-medium"> {getStatusText(order.status)} </span> </div> <p className="text-sm text-gray-600 mt-1">{order.statusTime}</p> </div> </div> </div>
-                      <div className="p-4"> <div className="flex justify-between items-center"> <div> <h3 className="font-medium">{order.service} ({order.courier})</h3> {order.items.slice(0, 2).map((item, index) => ( <p key={index} className="text-sm text-gray-600"> {item.quantity}x {item.name} {index === 1 && order.items.length > 2 && '...'} </p> ))} {order.items.length === 0 && <p className="text-sm text-gray-500">Tidak ada item.</p>} </div> <div className="text-right"> <div className="text-green-600 font-medium text-lg"> Rp. {order.total.toLocaleString()} </div> <button className="bg-green-600 text-white px-4 py-2 rounded-lg mt-2 text-sm hover:bg-green-700" onClick={(e) => { e.stopPropagation(); setSelectedOrder(order.id); }}> Lihat Detail </button> </div> </div> </div>
-                    </div>
-                  ))
-                ) : ( <div className="text-center text-gray-500 py-8"> <Package size={48} className="mx-auto mb-4 text-gray-400" /> <p className="text-xl">Anda belum memiliki pesanan aktif.</p> <p>Silakan buat pesanan baru untuk melihatnya di sini.</p> </div> )}
-              </div>
-            )}
-            {activeTab === 'riwayat' && ( /* Riwayat Transaksi Tab Content */
-              <>
-                {transactionHistory.length > 0 ? (
-                  <div className="space-y-4">
-                    {transactionHistory.map((transaction) => (
-                      <div key={transaction.id} className="bg-white rounded-lg shadow overflow-hidden">
-                        <div className="p-4 border-b bg-gray-50"> <div className="flex justify-between items-center text-gray-700"> <div className="flex items-center"> <div className="bg-green-100 p-2 rounded-full mr-3"> <CheckCircle className="w-6 h-6 text-green-600" /> </div> <div> <div className="font-medium text-green-700">Transaksi Selesai</div> <div className="text-sm text-gray-500">{transaction.date} - {transaction.time}</div> </div> </div> <div className="text-right"> <span className="text-lg font-semibold">Rp. {(transaction.price * transaction.quantity).toLocaleString()}</span> </div> </div> </div>
-                        <div className="p-4 flex items-center"> <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 mr-4"> <img src={transaction.image} alt={transaction.item} className="w-full h-full object-cover text-xs text-gray-400 flex items-center justify-center" onError={(e) => (e.currentTarget.outerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><Package size={32} /></div>')} /> </div> <div className="ml-4 flex-grow"> <div className="flex justify-between items-center"> <div> <h3 className="text-xl font-medium">{transaction.item}</h3> <p className="text-gray-600">{transaction.category}</p> <p className="text-gray-800_">{transaction.quantity}x @ Rp. {transaction.price.toLocaleString()}</p> </div> <div className="text-right"> <button className="bg-green-600 text-white px-6 py-2 rounded-lg mt-2 hover:bg-green-700"> Beli Lagi </button> </div> </div> </div> </div>
+          {trackingStepsToDisplay.length > 0 && (
+            <div className="bg-white rounded-lg p-6 shadow">
+              <h3 className="text-lg font-medium mb-4">Status Pengiriman / Pesanan</h3>
+              <div className="space-y-6">
+                {trackingStepsToDisplay.map((step, index) => (
+                  <div key={step.status + index} className={`flex items-start ${step.active ? '' : 'opacity-50'}`}>
+                    <div className="flex flex-col items-center mr-4">
+                      <div className={`p-3 rounded-full ${step.active ? (step.isCurrent ? 'bg-green-500 text-white' : 'bg-green-100') : 'bg-gray-100'}`}>
+                        {getStatusIcon(step.status as DeliveryOrder['status'])}
                       </div>
-                    ))}
+                      {index < trackingStepsToDisplay.length - 1 && (
+                        <div className={`w-px h-12 mt-2 ${step.active ? 'bg-green-300' : 'bg-gray-200'}`}></div>
+                      )}
+                    </div>
+                    <div className="flex-grow pt-1">
+                      <h4 className={`text-lg font-medium ${step.active ? 'text-gray-800' : 'text-gray-500'}`}>{step.label}</h4>
+                      {step.time && <p className="text-gray-600 text-sm">{step.time}</p>}
+                    </div>
                   </div>
-                ) : ( <div className="text-center text-gray-500 py-8"> <Clock size={48} className="mx-auto mb-4 text-gray-400" /> <p className="text-xl">Riwayat transaksi Anda kosong.</p> <p>Semua transaksi yang telah selesai akan muncul di sini.</p> </div> )}
-              </>
-            )}
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white rounded-lg p-6 shadow">
+            <h3 className="text-lg font-medium mb-4">Detail Item Pesanan</h3>
+            <div className="space-y-4">
+              {orderForDetail.items.map((item, index) => (
+                <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                      <Package size={20} className="text-gray-400" /> {/* Placeholder icon */}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-800">{item.name}</h4>
+                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-800">{formatCurrency(item.price * item.quantity)}</p>
+                    {item.quantity > 1 && <p className="text-xs text-gray-500">(@ {formatCurrency(item.price)})</p>}
+                  </div>
+                </div>
+              ))}
+              {orderForDetail.shippingCost && orderForDetail.shippingCost > 0 && (
+                <div className="flex justify-between items-center py-2 border-b text-gray-700">
+                    <span>Ongkos Kirim</span>
+                    <span>{formatCurrency(orderForDetail.shippingCost)}</span>
+                </div>
+              )}
+              <div className="pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-medium text-gray-800">Total Pesanan</span>
+                  <span className="text-xl font-bold text-green-600">{formatCurrency(orderForDetail.total)}</span>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {(orderForDetail.shippingAddress || orderForDetail.notes || authUser) && (
+            <div className="bg-white rounded-lg p-6 shadow">
+              <h3 className="text-lg font-medium mb-4">Informasi Tambahan</h3>
+              <div className="space-y-3 text-sm">
+                {authUser && (
+                  <>
+                    <div>
+                      <p className="text-gray-500">Nama Penerima/Pemesan</p>
+                      <p className="font-medium text-gray-800">{authUser.username}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Email</p>
+                      <p className="font-medium text-gray-800">{authUser.email}</p>
+                    </div>
+                     {authUser.contact?.phone && (
+                        <div>
+                            <p className="text-sm text-gray-500">Telepon</p>
+                            <p className="font-medium text-gray-800">{authUser.contact.phone}</p>
+                        </div>
+                    )}
+                  </>
+                )}
+                {orderForDetail.deliveryOption === 'delivery' && orderForDetail.shippingAddress && (
+                  <div>
+                    <p className="text-gray-500">Alamat Pengiriman</p>
+                    <p className="font-medium text-gray-800 whitespace-pre-line">{orderForDetail.shippingAddress}</p>
+                  </div>
+                )}
+                {orderForDetail.deliveryOption === 'pickup' && (
+                     <div>
+                        <p className="text-gray-500">Opsi Pengambilan</p>
+                        <p className="font-medium text-gray-800">Akan diambil di toko oleh pelanggan.</p>
+                    </div>
+                )}
+                {orderForDetail.notes && (
+                  <div>
+                    <p className="text-gray-500">Catatan Pesanan</p>
+                    <p className="font-medium text-gray-800 whitespace-pre-line">{orderForDetail.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+             <div className="text-center mt-6">
+                <button
+                    onClick={() => setSelectedOrderId(null)}
+                    className="text-green-600 hover:text-green-700 font-medium"
+                >
+                    &larr; Kembali ke Daftar Pesanan
+                </button>
+            </div>
+        </div>
+      </AppTemplate>
+    );
+  }
+
+  // Main list view (Pesanan / Riwayat Tabs)
+  return (
+    <AppTemplate>
+      <div className="bg-green-700 text-white py-6 relative">
+        <div className="px-4 flex items-center">
+          <h1 className="text-2xl font-bold text-center w-full">
+            {activeTab === 'pesanan' ? 'Pesanan Saya' : 'Riwayat Pesanan'}
+          </h1>
         </div>
       </div>
 
-      {/* Footer (No changes here) */}
-      <footer className="bg-gray-200 py-10 mt-10"> <div className="px-4"> <div className="grid grid-cols-1 md:grid-cols-3 gap-8"> <div> <div className="text-3xl font-bold text-green-800 mb-4">RB Store</div> <p className="text-sm text-gray-600"> Company # 490039-445, Registered with House of companies. </p> </div> <div> <p className="mb-4 font-medium">dapatkan penawaran special</p> <div className="flex"> <input type="email" placeholder="youremail@gmail.com" className="px-4 py-2 border rounded-l w-full" /> <button className="bg-green-700 text-white px-4 py-2 rounded-r"> Subscribe </button> </div> <p className="text-xs mt-2 text-gray-600"> we want spam, read our email policy </p> </div> <div className="grid grid-cols-2"> <div> <p className="font-medium mb-3">Legal Pages</p> <ul className="space-y-2 text-sm"> <li><a href="#" className="hover:text-green-700">Terms and conditions</a></li> <li><a href="#" className="hover:text-green-700">Privacy</a></li> <li><a href="#" className="hover:text-green-700">Cookies</a></li> <li><a href="#" className="hover:text-green-700">Modern Slavery Statement</a></li> </ul> </div> <div> <p className="font-medium mb-3">Important Links</p> <ul className="space-y-2 text-sm"> <li><a href="#" className="hover:text-green-700">Get help</a></li> </ul> </div> </div> </div> </div> </footer>
-      <div className="bg-gray-900 text-white py-3"> <div className="px-4 flex flex-wrap justify-between text-sm"> <span>Privacy Policy</span> <span>Terms</span> <span>Pricing</span> <span>Do not sell or share my personal information</span> </div> </div>
-    </div>
+      <div className="w-full mt-8 px-4 pb-8">
+        <div className="flex border-b">
+          <div className="flex items-center mb-4 cursor-pointer mr-8" onClick={() => setActiveTab('pesanan')}>
+            <div className="p-2 rounded-full border bg-white mr-3">
+              <ShoppingCart size={24} className={activeTab === 'pesanan' ? 'text-green-600' : 'text-gray-500'} />
+            </div>
+            <span className={`text-xl font-medium ${activeTab === 'pesanan' ? 'text-green-600 border-b-2 border-green-600 pb-1' : 'text-gray-500'}`}>
+              Pesanan Aktif
+            </span>
+          </div>
+          <div className="flex items-center mb-4 cursor-pointer" onClick={() => setActiveTab('riwayat')}>
+            <div className="p-2 rounded-full border bg-white mr-3">
+              <Clock size={24} className={activeTab === 'riwayat' ? 'text-green-600' : 'text-gray-500'} />
+            </div>
+            <span className={`text-xl font-medium ${activeTab === 'riwayat' ? 'text-green-600 border-b-2 border-green-600 pb-1' : 'text-gray-500'}`}>
+              Riwayat
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          {activeTab === 'pesanan' && (
+            <div className="space-y-4">
+              {activeDisplayOrders.length > 0 ? (
+                activeDisplayOrders.map((order) => (
+                  <div key={order.id} className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedOrderId(order.id)}>
+                    <div className="p-4 border-b bg-gray-50">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center">
+                        <div>
+                          <p className="text-xs text-gray-500">No. Pesanan</p>
+                          <p className="font-semibold text-gray-800">{order.orderNumber}</p>
+                        </div>
+                        <div className="text-left sm:text-right mt-2 sm:mt-0">
+                          <div className="flex items-center justify-start sm:justify-end">
+                            {getStatusIcon(order.status)}
+                            <span className="ml-2 text-gray-700 font-medium">
+                              {getStatusText(order.status)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">{order.statusTime}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-start">
+                        <div className="mb-3 sm:mb-0">
+                          <h3 className="font-medium text-gray-800">{order.service} <span className="text-sm text-gray-500">({order.courier})</span></h3>
+                           {order.items.slice(0, 2).map((item, index) => (
+                            <p key={index} className="text-sm text-gray-600">
+                              {item.quantity}x {item.name} {index === 0 && order.items.length > 1 && ', ...'}
+                            </p>
+                          ))}
+                          {order.items.length === 0 && <p className="text-sm text-gray-500">Tidak ada item.</p>}
+                        </div>
+                        <div className="text-left sm:text-right">
+                          <div className="text-green-600 font-semibold text-lg mb-1">
+                            {formatCurrency(order.total)}
+                          </div>
+                          <button className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50" onClick={(e) => { e.stopPropagation(); setSelectedOrderId(order.id); }}>
+                            Lihat Detail
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-8 bg-white rounded-lg shadow">
+                  <Package size={48} className="mx-auto mb-4 text-gray-400" />
+                  <p className="text-xl">Anda belum memiliki pesanan aktif.</p>
+                  <p>Silakan buat pesanan baru untuk melihatnya di sini.</p>
+                </div>
+              )}
+            </div>
+          )}
+          {activeTab === 'riwayat' && (
+             <div className="space-y-4">
+              {historicalDisplayOrders.length > 0 ? (
+                historicalDisplayOrders.map((order) => (
+                  <div key={order.id} className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedOrderId(order.id)}>
+                     <div className="p-4 border-b bg-gray-50">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center">
+                        <div>
+                          <p className="text-xs text-gray-500">No. Pesanan</p>
+                          <p className="font-semibold text-gray-800">{order.orderNumber}</p>
+                        </div>
+                        <div className="text-left sm:text-right mt-2 sm:mt-0">
+                          <div className="flex items-center justify-start sm:justify-end">
+                            {getStatusIcon(order.status)}
+                            <span className="ml-2 text-gray-700 font-medium">
+                              {getStatusText(order.status)}
+                            </span>
+                          </div>
+                           <p className="text-xs text-gray-500 mt-1">{order.statusTime}</p>
+                        </div>
+                      </div>
+                    </div>
+                     <div className="p-4">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-start">
+                        <div className="mb-3 sm:mb-0">
+                          <h3 className="font-medium text-gray-800">{order.service} <span className="text-sm text-gray-500">({order.courier})</span></h3>
+                           {order.items.slice(0, 2).map((item, index) => (
+                            <p key={index} className="text-sm text-gray-600">
+                              {item.quantity}x {item.name} {index === 0 && order.items.length > 1 && ', ...'}
+                            </p>
+                          ))}
+                           {order.items.length === 0 && <p className="text-sm text-gray-500">Tidak ada item.</p>}
+                        </div>
+                        <div className="text-left sm:text-right">
+                          <div className="text-gray-700 font-semibold text-lg mb-1">
+                            {formatCurrency(order.total)}
+                          </div>
+                          <button className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50" onClick={(e) => { e.stopPropagation(); setSelectedOrderId(order.id); }}>
+                            Lihat Detail
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-8 bg-white rounded-lg shadow">
+                  <Clock size={48} className="mx-auto mb-4 text-gray-400" />
+                  <p className="text-xl">Riwayat pesanan Anda kosong.</p>
+                  <p>Semua pesanan yang telah selesai atau dibatalkan akan muncul di sini.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </AppTemplate>
   );
 };
 
