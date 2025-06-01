@@ -58,7 +58,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('courier')->name('courier.')->group(function () {
         Route::get('/', function () {
-            echo "Ini halaman kurir ya cantik!";
+            echo "Ini halaman kurir ya";
         })->name('dashboard');
     });
 

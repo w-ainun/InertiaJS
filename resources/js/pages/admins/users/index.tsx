@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import { BreadcrumbItem, SharedData, User } from '@/types';
 
-// import { BorderBeam } from '@/components/ui/border-beam';
 import { columns } from './columns';
 import { DataTable } from '@/components/ui/data-table';
 import AppLayout from '@/components/layouts/app-layout';
@@ -14,21 +13,8 @@ const breadcrumbs: BreadcrumbItem[] = [{
 }];
 
 export default function Users() {
-  const { users, success, error } = usePage<
-    SharedData & { users: { data: User[] } }
-  >().props;
+  const { users, success, error } = usePage<SharedData & { users: { data: User[] } }>().props;
   console.log(users);
-
-  // const [ role, setRole ] = useState<User[]>([]);
-  // const [ deleted_at, setDeleted_at ] = useState<User[]>([]);
-
-  // const userFiltered = useCallback(() => {
-  //   return users.data.filter(
-  //     (users) => (
-        
-  //     )
-  //   );
-  // });
 
   useEffect(() => {
     if (success) toast.success(success as string);
@@ -44,9 +30,8 @@ export default function Users() {
             columns={columns}
             data={users.data}
             searchKey="username"
-            create="user"
+            create="users"
           />
-          {/* <BorderBeam size={300} duration={10} /> */}
         </div>
       </div>
     </AppLayout>

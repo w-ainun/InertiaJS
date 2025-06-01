@@ -21,6 +21,9 @@ export interface NavItem {
 export interface SharedData {
   auth: Auth;
   name: string;
+  contacts: {
+    data: Contact[];
+  };
   [key: string]: unknown;
   ziggy: Config & { location: string };
   quote: { message: string; author: string };
@@ -45,14 +48,16 @@ export interface Contact {
   user_id: number;
   name: string;
   phone: string;
-  profile?: string;           // nullable di migration
+  profile?: string; // nullable di migration
   gender: 'MAN' | 'WOMAN';
-  birthday: string;           // tanggal dalam format YYYY-MM-DD
-  favourite?: string[];       // json di-DB, map ke array
-  created_at: string;         // ISO timestamp
-  updated_at: string;         // ISO timestamp
+  birthday: Date; // tanggal dalam format YYYY-MM-DD
+  favourite?: []; // json di-DB, map ke array
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
   deleted_at?: string | null; // softDeletes
-  [key: string]: unknown;     // untuk properti tambahan
+  user: User; // M:1
+  // addressess: Address[];      // 1:M
+  [key: string]: unknown; // untuk properti tambahan
 }
 
 export interface Address {
@@ -63,7 +68,7 @@ export interface Address {
   province: string;
   city: string;
   street: string;
-  more?: string;          // nullable di migration
+  more?: string; // nullable di migration
   created_at: string;
   updated_at: string;
   [key: string]: unknown;

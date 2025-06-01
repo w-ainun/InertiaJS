@@ -32,7 +32,7 @@ export default function Users() {
             columns={columns}
             data={contacts.data}
             searchKey="name"
-            create="contact"
+            create="contacts"
           />
           {/* <BorderBeam size={300} duration={10} /> */}
         </div>

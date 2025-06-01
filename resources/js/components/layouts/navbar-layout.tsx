@@ -59,13 +59,12 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
 
   return (
     <section aria-label="navigation" className={`flex justify-between items-center ${className}`}>
-      <FigureCap src="/RB-Store1.png" alt="RB Store Logo" className="w-72" /> {/* Added descriptive alt text */}
-
+      <FigureCap src="/RB-Store1.png" alt="RB Store Logo" className="w-72" />
       <div className="flex items-center gap-6">
         <div className="flex gap-4">
           {primaryNavLinks.map(({ label, href }) => (
             <Link
-              key={href} // Use href as key
+              key={href}
               href={href}
               className={getLinkClasses(href)}
             >
@@ -77,18 +76,17 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
         <div className="flex items-center rounded-4xl bg-black px-6 py-3 text-white ml-4">
           {!user ? (
             <>
-              <img src="/svg/male.svg" alt="user icon" className="pr-2 h-6 w-6" /> {/* Added alt text */}
+              <img src="/svg/male.svg" alt="user icon" className="pr-2 h-6 w-6" />
               <Link href="/login" className="hover:underline">Login</Link>
               <span className="px-1">/</span>
               <Link href="/register" className="hover:underline">Register</Link>
             </>
           ) : (
             <>
-              <img src="/svg/male.svg" alt="user icon" className="pr-2 h-6 w-6" /> {/* Added alt text */}
+              <img src="/svg/male.svg" alt="user icon" className="pr-2 h-6 w-6" />
               <Link href={route('profile.show')} className="hover:underline">
                 Halo, {user.username}
               </Link>
-              {/* Uncomment this button when ready to enable logout */}
               <button onClick={handleLogout} className="ml-4 underline">Logout</button>
             </>
           )}

@@ -5,10 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Inertia\Inertia;
 
-class CategoryController extends Controller
-{
-    public function index()
-    {
+class CategoryController extends Controller {
+    public function index() {
         $categories = Category::all();
         $defaultCategorySlug = 'kue-basah'; // Slug kategori default
 
@@ -38,8 +36,7 @@ class CategoryController extends Controller
         }
     }
 
-    public function show($slug)
-    {
+    public function show($slug) {
         $categories = Category::all(); // Selalu ambil semua kategori untuk navigasi
         $selectedCategory = Category::where('slug', $slug)->firstOrFail();
         $items = $selectedCategory->items()->where('is_available', true)->get();

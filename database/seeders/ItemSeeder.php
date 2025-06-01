@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class ItemSeeder extends Seeder
 {
@@ -471,7 +470,7 @@ class ItemSeeder extends Seeder
                 'image_url' => $item['image_url'],
                 'stock' => $item['stock'] ?? 10,
                 'category_id' => $category->id,
-                'expired_at' => $item['expired_at'], // Added expired_at field
+                'expired_at' => $item['expired_at'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

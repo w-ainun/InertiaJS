@@ -49,11 +49,11 @@ export const columns: ColumnDef<Address, string>[] = [
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => {
-      const user = row.original;
+      const address = row.original;
       return (
         <div className="flex gap-5">
-          <EditButton endpoint="user" id={String(user.id)} />
-          <DeleteModal resourceName="user" id={user.id} />
+          <EditButton endpoint="addres" id={String(address.id)} />
+          <DeleteModal resourceName="address" id={address.id} />
         </div>
       );
     },

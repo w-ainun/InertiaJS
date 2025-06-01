@@ -15,18 +15,15 @@ use Inertia\Inertia;
 use Midtrans\Config as MidtransConfig;
 use Midtrans\Snap as MidtransSnap;
 
-class CartController extends Controller
-{
-    public function __construct()
-    {
+class CartController extends Controller {
+    public function __construct() {
         MidtransConfig::$serverKey = config('midtrans.server_key');
         MidtransConfig::$isProduction = config('midtrans.is_production');
         MidtransConfig::$isSanitized = config('midtrans.is_sanitized');
         MidtransConfig::$is3ds = config('midtrans.is_3ds');
     }
 
-    public function index()
-    {
+    public function index() {
         $cartItemsSession = session('cart', []);
         $items = [];
         $subtotal = 0;
@@ -105,8 +102,7 @@ class CartController extends Controller
         ]);
     }
 
-    public function getCartData()
-    {
+    public function getCartData() {
         $cartItemsSession = session('cart', []);
         $itemCount = 0;
         $totalValue = 0;
@@ -134,13 +130,12 @@ class CartController extends Controller
         ]);
     }
 
-
-    public function addToCart(Request $request)
-    {
+    public function addToCart(Request $request) {
         $request->validate([
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:1'
         ]);
+
         $cart = session('cart', []);
         $itemId = $request->item_id;
         $quantity = (int)$request->quantity;
@@ -152,15 +147,16 @@ class CartController extends Controller
             $cart[$itemId] = $quantity;
         }
         session(['cart' => $cart]);
+
         return back()->with('success', 'Item added to cart successfully!');
     }
 
-    public function updateCart(Request $request)
-    {
+    public function updateCart(Request $request) {
         $request->validate([
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:0'
         ]);
+
         $cart = session('cart', []);
         $itemId = $request->item_id;
         $quantity = (int)$request->quantity;
@@ -170,21 +166,22 @@ class CartController extends Controller
         } else {
             unset($cart[$itemId]);
         }
+
         session(['cart' => $cart]);
+
         return back()->with('success', 'Cart updated successfully!');
     }
 
-    public function removeFromCart(Request $request)
-    {
+    public function removeFromCart(Request $request) {
         $request->validate(['item_id' => 'required|exists:items,id']);
         $cart = session('cart', []);
         unset($cart[$request->item_id]);
         session(['cart' => $cart]);
+
         return back()->with('success', 'Item removed from cart successfully!');
     }
 
-    public function checkout(Request $request)
-    {
+    public function checkout(Request $request) {
         $request->validate([
             'note' => 'nullable|string|max:1000',
             'delivery_option' => 'required|in:delivery,pickup',

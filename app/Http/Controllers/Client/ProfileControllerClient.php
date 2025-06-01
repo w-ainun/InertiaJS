@@ -12,16 +12,15 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Address;
 use App\Models\Contact;
 
-class ProfileControllerClient extends Controller
-{
-    public function show()
-    {
+class ProfileControllerClient extends Controller {
+    public function show() {
         $user = Auth::user();
         // Eager load contact and its plural addresses
         $user->load('contact.addresses');
 
         $contact = $user->contact;
         // Pass the collection of addresses
+ 
         $addresses = $contact ? $contact->addresses : collect();
 
         return Inertia::render('clients/ProfilePage', [ // Filename adjusted to ProfilePage
@@ -33,6 +32,7 @@ class ProfileControllerClient extends Controller
             ],
             'contact' => $contact ? [
                 'id' => $contact->id,
+
                 // The 'name' field for contact will be the username
                 'name' => $contact->name, // This 'name' in the contact model should store the username
                 'phone' => $contact->phone,
@@ -49,7 +49,7 @@ class ProfileControllerClient extends Controller
                     'city' => $address->city,
                     'street' => $address->street,
                     'more' => $address->more,
-                     'summary' => trim(implode(', ', array_filter([
+                    'summary' => trim(implode(', ', array_filter([
                         $address->street, $address->more, $address->city, $address->province, $address->post_code, $address->country
                     ]))),
                 ];
@@ -57,21 +57,19 @@ class ProfileControllerClient extends Controller
         ]);
     }
 
-    public function update(Request $request)
-    {
+    public function update(Request $request) {
         $user = Auth::user();
 
         // Validate user and contact data
         $request->validate([
-            'name' => 'required|string|max:255', // This is for user.name
-            'username' => 'required|string|max:255|unique:users,username,' . $user->id, // This is for user.username
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'phone' => 'nullable|string|max:20',
             'gender' => 'nullable|in:MAN,WOMAN',
             'birthday' => 'nullable|date',
             'profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-
             'addresses' => 'nullable|array',
             'addresses.*.id' => 'nullable|integer|exists:addresses,id',
             'addresses.*.post_code' => 'nullable|string|max:10',
@@ -91,9 +89,9 @@ class ProfileControllerClient extends Controller
         if ($request->filled('password')) {
             $userData['password'] = Hash::make($request->password);
         }
+
         $user->update($userData);
         $user->refresh(); // Refresh user model to get updated username immediately
-
         $contact = $user->contact;
         $profilePath = $contact ? $contact->profile : null;
 
@@ -109,11 +107,10 @@ class ProfileControllerClient extends Controller
             $profilePath = null;
         }
 
-        // Contact's name will now be the user's username.
         $contactData = [
             'user_id' => $user->id,
-            'name' => $user->username, // Use the (potentially updated) username
-            'phone' => $request->phone ?? ($contact->phone ?? null),
+            'name' => $request->name ?? $user->username,
+            'phone' => $request->phone ?? ($contact->phone ?? ''),
             'gender' => $request->gender ?? ($contact->gender ?? 'MAN'),
             'birthday' => $request->birthday ?? ($contact->birthday ?? now()->format('Y-m-d')),
         ];
@@ -130,15 +127,14 @@ class ProfileControllerClient extends Controller
         }
 
         // --- Handle Multiple Addresses ---
+
         if ($contact) {
             $currentAddressIds = $contact->addresses->pluck('id')->toArray();
             $submittedAddressIds = [];
-
             if ($request->has('addresses') && is_array($request->addresses)) {
                 foreach ($request->addresses as $addressData) {
                     $addressData = array_map(fn($value) => is_string($value) ? trim($value) : $value, $addressData);
                     $meaningfulFields = array_filter($addressData, fn($value, $key) => $key !== 'id' && !empty($value), ARRAY_FILTER_USE_BOTH);
-
                     if (!empty($meaningfulFields)) {
                          if (empty($addressData['street']) || empty($addressData['city']) || empty($addressData['province']) || empty($addressData['post_code']) || empty($addressData['country'])) {
                             continue;
@@ -164,8 +160,7 @@ class ProfileControllerClient extends Controller
         return redirect()->back()->with('success', 'Profile updated successfully!');
     }
 
-    public function storeAddressFromCart(Request $request)
-    {
+    public function storeAddressFromCart(Request $request) {
         $user = Auth::user();
         // Ensure contact exists or create one
         // The contact's 'name' will be the user's username.

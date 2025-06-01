@@ -8,7 +8,7 @@ import { DataTable } from '@/components/ui/data-table';
 import AppLayout from '@/components/layouts/app-layout';
 
 const breadcrumbs: BreadcrumbItem[] = [{
-  title: 'Addressess',
+  title: 'Address',
   href: '/address',
 }];
 
@@ -32,7 +32,7 @@ export default function Users() {
             columns={columns}
             data={address.data}
             searchKey="post_code"
-            create="contact"
+            create="address"
           />
           {/* <BorderBeam size={300} duration={10} /> */}
         </div>

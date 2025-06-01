@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, usePage } from "@inertiajs/react"; // usePage might be useful for auth user
+import { Link, usePage } from "@inertiajs/react";
 import { MapPin } from "lucide-react";
 import axios from 'axios';
-
-// Make sure route() is available, often through Ziggy in a global scope or imported
 declare function route(name: string, params?: Record<string, any>): string;
 
 type HeaderLayoutProps = {
@@ -16,50 +14,39 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({ className = "" }) => {
   const [loadingCart, setLoadingCart] = useState<boolean>(true);
   const [errorCart, setErrorCart] = useState<string | null>(null);
 
-  // Optional: Get authenticated user from Inertia props if needed for display
-  // const { auth } = usePage().props as any; // Adjust type as per your shared props
-
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
-    }).format(price).replace(/\s*IDR\s*/, 'Rp '); // Added space for Rp.
+    }).format(price).replace(/\s*IDR\s*/, 'Rp ');
   };
 
   const fetchCartData = async () => {
-    // Only fetch if user is potentially logged in or cart is not guest-specific
-    // This depends on your application logic for guest carts vs user carts
-    // For now, assume it always fetches.
     try {
       setLoadingCart(true);
       setErrorCart(null);
-      const response = await axios.get(route('client.cart.data')); // Use the new route
+      const response = await axios.get(route('client.cart.data'));
       setCartCount(response.data.count);
       setCartTotal(response.data.total);
     } catch (error) {
       console.error("Failed to fetch cart data for header:", error);
-      setErrorCart("Error"); // Keep it short for header
-      // Don't reset to 0 if there was a previous valid count, unless intended
+      setErrorCart("Error");
     } finally {
       setLoadingCart(false);
     }
   };
 
   useEffect(() => {
-    fetchCartData(); // Fetch on initial load
-
-    // Listen for custom 'cart-updated' event
+    fetchCartData();
     const handleCartUpdateEvent = () => {
       fetchCartData();
     };
     window.addEventListener('cart-updated', handleCartUpdateEvent);
-
-    // Cleanup listener on component unmount
     return () => {
       window.removeEventListener('cart-updated', handleCartUpdateEvent);
     };
-  }, []); // Empty dependency array means it runs once on mount and cleans up on unmount
+  }, []);
 
   return (
     <header
@@ -82,7 +69,6 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({ className = "" }) => {
           Change
         </Link>
       </div>
-
       <Link 
         href={route('client.cart.index')} 
         className="flex items-center gap-1 h-full text-white bg-[#028643] rounded-b-2xl md:rounded-b-none md:rounded-bl-2xl text-sm w-full md:w-auto justify-center py-2 md:py-0 order-first md:order-last mt-2 md:mt-0"
