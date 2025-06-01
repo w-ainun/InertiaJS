@@ -16,7 +16,7 @@ class Category extends Model {
         return $this->hasMany(Item::class);
     }
 
-    protected $fillable = ['name', 'slug'];
+protected $fillable = ['name', 'slug', 'image_url', 'description'];
 
     protected static function booted()
 {

@@ -194,7 +194,7 @@ class ItemSeeder extends Seeder
                 'name' => 'Burnt Cheesecake',
                 'description' => 'Kue keju panggang dengan permukaan gosong khas, tekstur lembut dan creamy di dalamnya',
                 'price' => 22000,
-                'image_url' => '/img/burnt-cheesecake.png',
+                'image_url' => '/img/burn-cheesecake.png',
                 'category_slug' => 'kue-modern',
                 'expired_at' => Carbon::now()->addDays(5)->toDateString(),
             ],

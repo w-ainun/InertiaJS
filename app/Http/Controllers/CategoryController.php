@@ -17,9 +17,10 @@ class CategoryController extends Controller {
         $category = Category::where('slug', $slug)->firstOrFail();
         $items = $category->items()->where('is_available', true)->get();
 
-        return Inertia::render('clients/kategori', [
-            'kategori' => $category->name,
-            'produk' => $items
-        ]);
-    }
+    return Inertia::render('clients/kategori', [
+        'kategori' => $category->name,
+        'produk' => $items
+    ]);
+}
+
 }
