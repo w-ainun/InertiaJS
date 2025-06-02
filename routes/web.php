@@ -14,12 +14,11 @@ use App\Http\Controllers\Client\ProfileControllerClient;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Transaction;
-use App\Models\User; // Ditambahkan untuk type-hinting jika diperlukan
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
-})->name('landing page');
+})->name('home');
 
 Route::get('/offers', function () {
     return Inertia::render('offers');
@@ -42,7 +41,7 @@ Route::get('/menu/{slug}', [CategoryController::class, 'show'])->name('client.me
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->group(function () {
         Route::get('/', function () {
             return Inertia::render('admins/dashboard');
         })->name('dashboard');

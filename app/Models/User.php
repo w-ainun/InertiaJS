@@ -21,9 +21,8 @@ class User extends Authenticatable
         return $this->hasMany(Transaction::class, 'client_id', 'id');
     }
 
-    public function contact(): HasOne 
-    {
-        return $this->hasOne(Contact::class, 'user_id', 'id');
+    public function contacts(): HasMany {
+        return $this->hasMany(Contact::class, 'user_id', 'id');
     }
 
     protected $fillable = [

@@ -36,8 +36,13 @@ class AdminContactController extends Controller {
     public function store(StoreContactRequest $request) {
         try {
             $validated = $request->validated();
-            Contact::create($validated);
 
+            if ($request->hasFile('profile')) {
+                $profileUrl = $request->file('profile')->store('contacts', 'public');
+                $validated['profile'] = $profileUrl;
+            }
+
+            Contact::create($validated);
             return redirect()->route('contacts.index')->with('success', 'Contact created successfully.');
         } catch (\Exception $e) {
             Log::error($e->getMessage());

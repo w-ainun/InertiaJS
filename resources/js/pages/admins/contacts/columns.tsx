@@ -6,6 +6,8 @@ import { DataTableColumnHeader } from '@/components/templates/data-table-header'
 import { DeleteModal } from '@/components/templates/delete-modal';
 import { EditButton } from '@/components/templates/edit-button';
 import { Badge } from '@/components/ui/badge';
+import { useInitials } from '@/hooks/use-initials';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const columns: ColumnDef<Contact, string>[] = [
   {
@@ -20,6 +22,22 @@ export const columns: ColumnDef<Contact, string>[] = [
     cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Select row" />,
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    accessorKey: 'profile',
+    header: 'Profile',
+    cell: ({ row }) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const getInitials = useInitials();
+      return (
+        <Avatar className="h-8 w-8 overflow-hidden rounded-full">
+          <AvatarImage src={'/storage/' + row.getValue('profile')} alt={row.getValue('name')} />
+          <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+            {getInitials(row.getValue('name'))}
+          </AvatarFallback>
+        </Avatar>
+      );
+    },
   },
   {
     accessorKey: 'name',

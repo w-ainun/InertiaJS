@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class AdminUserController extends Controller {
     public function index() {
-        $users = User::withTrashed()->get();
+        $users = User::withTrashed()->with('contacts')->get();
 
         return Inertia::render('admins/users/index', [
             'users' => UserResource::collection($users),
