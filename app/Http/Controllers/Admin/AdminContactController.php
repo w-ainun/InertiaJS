@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 class AdminContactController extends Controller {
     public function index() {
-        $contacts = Contact::all();
+        $contacts = Contact::withTrashed()->with('user')->get();
 
         return Inertia::render('admins/contacts/index', [
             'contacts' => ContactResource::collection($contacts),
@@ -51,8 +51,14 @@ class AdminContactController extends Controller {
         }
     }
 
-    public function show(Contact $contact) {
-        //
+    public function show($id) {
+        $contact = Contact::withTrashed()->with('user')->findOrFail($id);
+
+        return Inertia::render('admins/contacts/show', [
+            'contacts' => new ContactResource($contact),
+            'success' => session('success'),
+            'error' => session('error'),
+        ]);
     }
 
     public function edit(Contact $contact) {
@@ -93,6 +99,19 @@ class AdminContactController extends Controller {
             Log::error($e->getMessage());
 
             return redirect()->back()->with('error', 'Failed to delete contact.');
+        }
+    }
+
+    public function restore($id) {
+        try {
+            $contact = Contact::withTrashed()->findOrFail($id);
+            $contact->restore();
+
+            return redirect()->back()->with('success', 'Contact restored successfully.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to restore contact.');
         }
     }
 }

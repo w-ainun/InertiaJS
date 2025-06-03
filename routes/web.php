@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', AdminUserController::class);
         Route::patch('admin/users/{user}/restore', [AdminUserController::class, 'restore'])->name('users.restore');
         Route::resource('contacts', AdminContactController::class);
+        Route::patch('/contacts/{id}/restore', [AdminContactController::class, 'restore'])->name('contacts.restore');
         Route::resource('address', AdminAddressController::class);
         Route::resource('transactions', AdminTransactionController::class);
         Route::resource('categories', AdminCategoryController::class);

@@ -51,7 +51,7 @@ export interface Contact {
   profile?: string; // nullable di migration
   gender: 'MAN' | 'WOMAN';
   birthday: Date; // tanggal dalam format YYYY-MM-DD
-  favourite?: []; // json di-DB, map ke array
+  favourite?: string[]; // json di-DB, map ke array
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
   deleted_at?: string | null; // softDeletes
