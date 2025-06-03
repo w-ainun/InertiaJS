@@ -67,10 +67,6 @@ class UserSeeder extends Seeder
         $clients = $inactiveClients->concat($activeClients)->shuffle();
         $clients->each(fn($client) => $client->save());
 
-        User::where('role', 'ADMIN')->where('id', '!=', $edho->id)->inRandomOrder()->first()?->delete();
-        User::where('role', 'COURIER')->where('id', '!=', $roni->id)->inRandomOrder()->first()?->delete();
-        User::where('role', 'CLIENT')->where('id', '!=', $prasetyo->id)->inRandomOrder()->first()?->delete();
-
         $userIds = User::where('role', '!=', 'ADMIN')->pluck('id')->toArray();
         Contact::factory()
             ->count(250)
@@ -91,5 +87,11 @@ class UserSeeder extends Seeder
                 $address->contact_id = Arr::random($clientContactIds);
                 $address->save();
             });
+
+        User::whereNotIn('id', [$edho->id, $roni->id, $prasetyo->id])
+            ->inRandomOrder()
+            ->limit(25)
+            ->get()
+            ->each(fn($user) => $user->delete());
     }
 }

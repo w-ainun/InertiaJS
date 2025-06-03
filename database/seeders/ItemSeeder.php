@@ -476,7 +476,5 @@ class ItemSeeder extends Seeder
                 'updated_at' => now(),
             ]);
         }
-
-        echo "Seeder manual selesai dijalankan.\n";
     }
 }

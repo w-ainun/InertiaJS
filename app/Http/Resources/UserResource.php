@@ -10,11 +10,13 @@ class UserResource extends JsonResource {
         // return parent::toArray($request);
         return [
             'id' => $this->id,
-            'email' => $this->email,
             'username' => $this->username,
-            'avatar' => $this->avatar,
+            'email' => $this->email,
             'role' => $this->role,
             'status' => $this->status,
+            'avatar' => $this->avatar,
+            // 'email_verified_at' => $this->email_verified_at,
+            'remember_token' => $this->remember_token,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at,
