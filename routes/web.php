@@ -17,7 +17,7 @@ use App\Models\Transaction;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('Homepage');
 })->name('home');
 
 Route::get('/offers', function () {
