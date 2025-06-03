@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ProfileControllerClient;
+use App\Http\Controllers\ItemController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Transaction;
@@ -18,8 +19,9 @@ use App\Models\User; // Ditambahkan untuk type-hinting jika diperlukan
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('landing page');
+    return redirect('/Homepage');
+});
+Route::get('/', [ItemController::class, 'index'])->name('homepage');
 
 Route::get('/offers', function () {
     return Inertia::render('offers');
