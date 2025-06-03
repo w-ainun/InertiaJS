@@ -30,7 +30,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'), // null coalescing operator (ternary / elvis)
             'role' => $this->faker->randomElement(['ADMIN', 'CLIENT', 'COURIER']),
             'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
+            'remember_token' => null,
         ];
     }
 
@@ -96,7 +96,7 @@ class UserFactory extends Factory
             'password' => Hash::make('admin123'),
             'role' => 'ADMIN',
             'avatar' => null,
-            'status' => 'active',
+            'status' => 'inactive',
             'email_verified_at' => now(),
             'remember_token' => Str::random(10),
         ]);
@@ -110,7 +110,7 @@ class UserFactory extends Factory
             'avatar' => null,
             'status' => 'inactive',
             'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
+            'remember_token' => null,
         ]);
     }
     public function yichang(): static {
@@ -157,7 +157,7 @@ class UserFactory extends Factory
             'avatar' => null,
             'status' => 'inactive',
             'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
+            'remember_token' => null,
         ]);
     }
     public function suhaila(): static {
@@ -167,9 +167,9 @@ class UserFactory extends Factory
             'password' => Hash::make('client123'),
             'role' => 'CLIENT',
             'avatar' => null,
-            'status' => 'active',
+            'status' => 'inactive',
             'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
+            'remember_token' => null,
         ]);
     }
     public function layli(): static {
@@ -179,9 +179,9 @@ class UserFactory extends Factory
             'password' => Hash::make('client123'),
             'role' => 'CLIENT',
             'avatar' => null,
-            'status' => 'active',
+            'status' => 'inactive',
             'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
+            'remember_token' => null,
         ]);
     }
 }

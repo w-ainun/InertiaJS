@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('admins/dashboard');
         })->name('dashboard');
         Route::resource('users', AdminUserController::class);
+        Route::patch('admin/users/{user}/restore', [AdminUserController::class, 'restore'])->name('users.restore');
         Route::resource('contacts', AdminContactController::class);
         Route::resource('address', AdminAddressController::class);
         Route::resource('transactions', AdminTransactionController::class);

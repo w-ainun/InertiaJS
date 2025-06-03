@@ -13,7 +13,7 @@ export default function NavUser() {
   const { state } = useSidebar();
   const isMobile = useIsMobile();
 
-  console.log(auth)
+  // console.log(auth)
 
   return (
     <SidebarMenu>

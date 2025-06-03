@@ -20,7 +20,7 @@ import {
   useReactTable,
   VisibilityState,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DataTableViewOptions } from './data-table-view-option';
 import { DataTablePagination } from './data-table-pagination';
 
@@ -32,6 +32,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]; // data of table
   searchKey: string;
   create: string;
+  hiddenColumns?: string[];
 }
 
 export function DataTable<TData, TValue>({
@@ -39,11 +40,25 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
   create,
+  hiddenColumns,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  useEffect(() => {
+    if (hiddenColumns) {
+      const hiddenColumnsVisibility: VisibilityState = hiddenColumns.reduce(
+      (acc, key) => {
+        acc[key] = false;
+        return acc;
+      },
+      {} as VisibilityState
+    );
+      setColumnVisibility(hiddenColumnsVisibility)
+    }
+  }, [hiddenColumns])
 
   const table = useReactTable({
     data,
