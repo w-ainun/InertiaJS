@@ -44,11 +44,9 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
 
   // Helper function for consistent link styling
   const getLinkClasses = (href: string) => {
-    // Check for exact match or startsWith for nested routes (e.g., /menu/item1)
-    const isActive = url === href || (href !== '/' && url.startsWith(href + '/'));
-    if (href === '/Homepage' && url === '/') { // Special case for homepage if your root is '/'
-      return "bg-[#028643] text-white";
-    }
+    // Normalize URL comparison
+    const currentPath = url === '/' ? '/Homepage' : url;
+    const isActive = currentPath === href || (href !== '/' && currentPath.startsWith(href));
 
     return `flex items-center rounded-full px-6 py-1 font-medium transition-colors duration-200 ${
       isActive

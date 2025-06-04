@@ -15,11 +15,12 @@ return new class extends Migration {
             );
             $table->integer('total');
             $table->text('note')->nullable();
-            $table->enum('payment_method', [
-                'cash',
-                'bank',
-                'e-wallet'
-            ])->default('cash');
+            $table->string('payment_method', 50)->nullable()->change();
+            // $table->enum('payment_method', [
+            //     'cash',
+            //     'bank',
+            //     'e-wallet'
+            // ])->default('cash');
             $table->enum('status', [
                 'pending',
                 'paid',

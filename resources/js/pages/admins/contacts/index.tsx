@@ -33,8 +33,8 @@ export default function Users() {
             data={contacts.data}
             searchKey="name"
             create="contacts"
+            hiddenColumns={['created_at', 'updated_at', 'deleted_at']}
           />
-          {/* <BorderBeam size={300} duration={10} /> */}
         </div>
       </div>
     </AppLayout>

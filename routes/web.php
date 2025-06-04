@@ -11,14 +11,18 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ProfileControllerClient;
+use App\Http\Controllers\ItemController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Transaction;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Homepage');
-})->name('home');
+
+    return redirect('/Homepage');
+});
+
+Route::get('/', [ItemController::class, 'index'])->name('homepage');
 
 Route::get('/offers', function () {
     return Inertia::render('offers');
@@ -47,7 +51,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('dashboard');
         Route::resource('users', AdminUserController::class);
         Route::resource('contacts', AdminContactController::class);
+        Route::patch('/contacts/{id}/restore', [AdminContactController::class, 'restore'])->name('contacts.restore');
         Route::resource('address', AdminAddressController::class);
+        Route::patch('/addresss/{id}/restore', [AdminAddressController::class, 'restore'])->name('address.restore');
         Route::resource('transactions', AdminTransactionController::class);
         Route::resource('categories', AdminCategoryController::class);
         Route::resource('items', AdminItemController::class);
@@ -66,10 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/profile/addresses', [ProfileControllerClient::class, 'storeAddressFromCart'])->name('profile.address.store');
 
     Route::get('/pesanan-saya', function () {
-        /** @var \App\Models\User $user */
         $user = Auth::user();
-
-        // Seharusnya tidak pernah null karena ada middleware 'auth', tapi sebagai penjagaan
         if (!$user) {
             return Inertia::render('PesananSaya', [
                 'activeOrders' => [],

@@ -31,10 +31,10 @@ export default function Users() {
           <DataTable<Address, string>
             columns={columns}
             data={address.data}
-            searchKey="post_code"
+            searchKey="contact"
             create="address"
+            hiddenColumns={['created_at', 'updated_at', 'deleted_at']}
           />
-          {/* <BorderBeam size={300} duration={10} /> */}
         </div>
       </div>
     </AppLayout>

@@ -34,6 +34,8 @@ const badgeVariants = cva(
           "border-transparent bg-green-500 text-white [a&]:hover:bg-green-600 dark:bg-green-600 dark:[a&]:hover:bg-green-700 animate-pulse",
         offline: // gray
           "border-transparent bg-gray-400 text-white [a&]:hover:bg-gray-500 dark:bg-gray-500 dark:[a&]:hover:bg-gray-600",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
       },
     },
     defaultVariants: {
