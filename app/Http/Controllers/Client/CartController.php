@@ -30,29 +30,37 @@ class CartController extends Controller {
         $totalItemDiscount = 0;
         $userAddresses = [];
         $authUser = Auth::user();
+        $userDisplayContactPhone = null;
 
         if ($authUser) {
-            $authUser->load('contact.addresses');
-            if ($authUser->contact && $authUser->contact->addresses) {
-                $userAddresses = $authUser->contact->addresses->map(function ($address) {
-                    return [
-                        'id' => $address->id,
-                        'post_code' => $address->post_code,
-                        'country' => $address->country,
-                        'province' => $address->province,
-                        'city' => $address->city,
-                        'street' => $address->street,
-                        'more' => $address->more,
-                        'summary' => trim(implode(', ', array_filter([
-                            $address->street,
-                            $address->more,
-                            $address->city,
-                            $address->province,
-                            $address->post_code,
-                            $address->country
-                        ]))),
-                    ];
-                })->all();
+            $authUser->load('contacts.addresses');
+            if ($authUser->contacts->isNotEmpty()) {
+                $firstContact = $authUser->contacts->first();
+                if ($firstContact) {
+                    $userDisplayContactPhone = $firstContact->phone;
+                }
+
+                $userAddresses = $authUser->contacts->flatMap(function ($contact) {
+                    return $contact->addresses->map(function ($address) {
+                        return [
+                            'id' => $address->id,
+                            'post_code' => $address->post_code,
+                            'country' => $address->country,
+                            'province' => $address->province,
+                            'city' => $address->city,
+                            'street' => $address->street,
+                            'more' => $address->more,
+                            'summary' => trim(implode(', ', array_filter([
+                                $address->street,
+                                $address->more,
+                                $address->city,
+                                $address->province,
+                                $address->post_code,
+                                $address->country
+                            ]))),
+                        ];
+                    });
+                })->values()->all();
             }
         }
 
@@ -96,7 +104,7 @@ class CartController extends Controller {
             'addresses' => $userAddresses,
             'user' => [
                 'name' => $authUser ? $authUser->name : 'Guest',
-                'contact_phone' => $authUser && $authUser->contact ? $authUser->contact->phone : null,
+                'contact_phone' => $userDisplayContactPhone,
                 'email' => $authUser ? $authUser->email : null,
             ],
         ]);
@@ -141,8 +149,8 @@ class CartController extends Controller {
         $quantity = (int)$request->quantity;
 
         if (isset($cart[$itemId])) {
-             $currentQuantity = is_array($cart[$itemId]) && isset($cart[$itemId]['quantity']) ? $cart[$itemId]['quantity'] : $cart[$itemId];
-             $cart[$itemId] = (int)$currentQuantity + $quantity;
+           $currentQuantity = is_array($cart[$itemId]) && isset($cart[$itemId]['quantity']) ? $cart[$itemId]['quantity'] : $cart[$itemId];
+           $cart[$itemId] = (int)$currentQuantity + $quantity;
         } else {
             $cart[$itemId] = $quantity;
         }
@@ -197,21 +205,35 @@ class CartController extends Controller {
             return back()->withErrors(['cart' => 'Your cart is empty!'])->withInput();
         }
 
-        $authUser = Auth::user();
+        $authUser = Auth::user()->loadMissing('contacts');
         $selectedAddress = null;
+        $customerContactPhoneForMidtrans = null;
+        $shippingContactPhoneForMidtrans = null;
+        $shippingContactNameForMidtrans = $authUser->name;
 
         if ($request->delivery_option === 'delivery') {
             if (!$request->selected_address_id) {
-                 return back()->withErrors(['selected_address_id' => 'Please select a delivery address.'])->withInput();
+               return back()->withErrors(['selected_address_id' => 'Please select a delivery address.'])->withInput();
             }
-            $selectedAddress = Address::find($request->selected_address_id);
+            $selectedAddress = Address::with('contact')->find($request->selected_address_id);
+
             if (!$selectedAddress || !$selectedAddress->contact || $selectedAddress->contact->user_id !== $authUser->id) {
                 return back()->withErrors(['selected_address_id' => 'The selected address does not belong to you or is invalid.'])->withInput();
+            }
+            $customerContactPhoneForMidtrans = $selectedAddress->contact->phone;
+            $shippingContactPhoneForMidtrans = $selectedAddress->contact->phone;
+            $shippingContactNameForMidtrans = $selectedAddress->contact->name;
+        } else {
+            if ($authUser->contacts->isNotEmpty()) {
+                $firstContact = $authUser->contacts->first();
+                if ($firstContact) {
+                    $customerContactPhoneForMidtrans = $firstContact->phone;
+                }
             }
         }
 
         DB::beginTransaction();
-        $midtrans_params = []; // Initialize for logging in case of early exception
+        $midtrans_params = [];
 
         try {
             $calculatedSubtotal = 0;
@@ -257,10 +279,10 @@ class CartController extends Controller {
                 ];
 
                 $midtransItemDetails[] = [
-                    'id'       => (string)$item->id,
-                    'price'    => round($pricePerUnitAfterDiscount),
-                    'quantity' => $quantity,
-                    'name'     => substr($item->name, 0, 50),
+                    'id'        => (string)$item->id,
+                    'price'     => round($pricePerUnitAfterDiscount),
+                    'quantity'  => $quantity,
+                    'name'      => substr($item->name, 0, 50),
                 ];
             }
 
@@ -268,10 +290,10 @@ class CartController extends Controller {
 
             if ($shippingCost > 0) {
                 $midtransItemDetails[] = [
-                    'id'       => 'SHIPPING_FEE',
-                    'price'    => round($shippingCost),
-                    'quantity' => 1,
-                    'name'     => 'Delivery Fee',
+                    'id'        => 'SHIPPING_FEE',
+                    'price'     => round($shippingCost),
+                    'quantity'  => 1,
+                    'name'      => 'Delivery Fee',
                 ];
             }
 
@@ -304,16 +326,19 @@ class CartController extends Controller {
 
             $midtransOrderId = $transaction->id . '-' . time();
             $customer_details = [
-                'first_name' => $authUser->name, 'email' => $authUser->email,
-                'phone' => $authUser->contact ? $authUser->contact->phone : null,
+                'first_name' => $authUser->name,
+                'email' => $authUser->email,
+                'phone' => $customerContactPhoneForMidtrans,
             ];
-            if ($request->delivery_option === 'delivery' && $selectedAddress && $authUser->contact) {
-                 $customer_details['shipping_address'] = [
-                    'first_name'   => $authUser->name, 'phone' => $authUser->contact->phone,
+            if ($request->delivery_option === 'delivery' && $selectedAddress && $selectedAddress->contact) {
+               $customer_details['shipping_address'] = [
+                    'first_name'   => $shippingContactNameForMidtrans,
+                    'phone'        => $shippingContactPhoneForMidtrans,
                     'address'      => $selectedAddress->street . ($selectedAddress->more ? ', '.$selectedAddress->more : ''),
-                    'city'         => $selectedAddress->city, 'postal_code'  => $selectedAddress->post_code,
+                    'city'         => $selectedAddress->city,
+                    'postal_code'  => $selectedAddress->post_code,
                     'country_code' => 'IDN',
-                 ];
+               ];
             }
 
             $midtrans_params = [
@@ -322,7 +347,7 @@ class CartController extends Controller {
                 'customer_details'    => $customer_details,
                 'callbacks' => ['finish' => route('client.orders.show', ['transaction' => $transaction->id, '_from_midtrans' => '1'])]
             ];
-            
+
             $snapToken = null;
             if ($grandTotalForMidtrans > 0) {
                 $snapToken = MidtransSnap::getSnapToken($midtrans_params);
@@ -342,12 +367,9 @@ class CartController extends Controller {
 
             Log::info("Checkout for order {$transaction->id} successful. Midtrans Snap Token generated. Order ID for Midtrans: {$midtransOrderId}");
 
-            Log::info('Flashing snap_token:', [$snapToken]);
-                session()->reflash(); // Cobalah ini untuk memastikan flash data ditulis sebelum redirect
-                session()->save(); // Dan ini
-            return redirect()->route('client.payment.initiate', ['transaction' => $transaction->id]) // MODIFIED HERE
+            return redirect()->route('client.payment.initiate', ['transaction' => $transaction->id])
                 ->with('snap_token', $snapToken)
-                ->with('success_payment_initiation', 'Order placed! Redirecting to payment...'); // MODIFIED HERE
+                ->with('success_payment_initiation', 'Order placed! Redirecting to payment...');
 
         } catch (\Exception $e) {
             DB::rollback();
