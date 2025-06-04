@@ -16,12 +16,16 @@ class Category extends Model {
         return $this->hasMany(Item::class);
     }
 
-protected $fillable = ['name', 'slug', 'image_url', 'description'];
+    protected $fillable = [
+        'name',
+        'slug',
+        'image_url',
+        'description'
+    ];
 
-    protected static function booted()
-{
-    static::creating(function ($category) {
-        $category->slug = Str::slug($category->name);
-    });
-}
+    protected static function booted() {
+        static::creating(function ($category) {
+            $category->slug = Str::slug($category->name);
+        });
+    }
 }

@@ -4,16 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      * php artisan migrate
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('google_id')->nullable()->unique();
 
             $table->string('username', 25)->unique();
             $table->string('email', 40)->unique();
@@ -25,6 +24,8 @@ return new class extends Migration
 
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
+            $table->text('google_token')->nullable();
+            $table->text('google_refresh_token')->nullable();
             $table->timestamps();
             $table->softDeletes(); // adds deleted_at TIMESTAMP nullable
         });
@@ -49,10 +50,10 @@ return new class extends Migration
      * Reverse the migrations.
      * php artisan migrate:fresh
      */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        // Schema::dropColumn(['google_id', 'google_token', 'google_refresh_token']);
     }
 };
