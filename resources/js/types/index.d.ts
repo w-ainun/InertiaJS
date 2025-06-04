@@ -48,16 +48,16 @@ export interface Contact {
   user_id: number;
   name: string;
   phone: string;
-  profile?: string; // nullable di migration
+  profile?: string;
   gender: 'MAN' | 'WOMAN';
-  birthday: Date; // tanggal dalam format YYYY-MM-DD
-  favourite?: string[]; // json di-DB, map ke array
-  created_at: string; // ISO timestamp
-  updated_at: string; // ISO timestamp
-  deleted_at?: string | null; // softDeletes
-  user: User; // M:1
-  // addressess: Address[];      // 1:M
-  [key: string]: unknown; // untuk properti tambahan
+  birthday: Date;
+  favourite?: string[];
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  user: User;
+  // addressess: Address[];
+  [key: string]: unknown;
 }
 
 export interface Address {
@@ -68,8 +68,10 @@ export interface Address {
   province: string;
   city: string;
   street: string;
-  more?: string; // nullable di migration
+  more?: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null;
+  contact: Contact | null;
   [key: string]: unknown;
 }

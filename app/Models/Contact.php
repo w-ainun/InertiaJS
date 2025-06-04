@@ -17,7 +17,7 @@ class Contact extends Model {
         return $this->belongsTo(User::class, "user_id", "id")->withTrashed();
     }
 
-    public function addresses(): HasMany { // Changed back to HasMany for multiple addresses
+    public function addresses(): HasMany {
         return $this->hasMany(Address::class, "contact_id", "id");
     }
 

@@ -19,9 +19,10 @@ return new class extends Migration {
             $table->string("province", 100);
             $table->string("city", 100);
             $table->string("street", 200);
-            $table->string("more", 50)->nullable();
+            $table->string("more")->nullable();
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

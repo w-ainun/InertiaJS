@@ -37,12 +37,12 @@ class UserSeeder extends Seeder {
         ]);
         Address::factory()->create([
             'contact_id' => $prasetyoContact->id,
-            'post_code' => '12345',
+            'post_code' => '69162',
             'country'   => 'Indonesia',
             'province'  => 'Jawa Timur',
             'city'      => 'Bangkalan',
-            'street'    => 'Jl. Telang No.1',
-            'more'      => 'RT 01/RW 02',
+            'street'    => 'Jl. Raya Telang',
+            'more'      => 'Kos PUTRA BINTANG AGUNG',
         ]);
 
         User::factory()->nur()->create();
@@ -83,7 +83,7 @@ class UserSeeder extends Seeder {
                 $address->contact_id = Arr::random($ccIDs);
                 $address->save();
             });
-// ================================================================== //
+    // ================================================================== //
         User::whereNotIn('id', [$edho->id, $roni->id, $prasetyo->id])
             ->inRandomOrder()
             ->limit(25)

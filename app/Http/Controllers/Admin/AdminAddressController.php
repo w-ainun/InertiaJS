@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 class AdminAddressController extends Controller {
     public function index() {
-        $address = Address::all();
+        $address = Address::withTrashed()->with('contact.user')->get();
 
         return Inertia::render('admins/address/index', [
             'address' => AddressResource::collection($address),
@@ -24,10 +24,10 @@ class AdminAddressController extends Controller {
     }
 
     public function create() {
-        $contacts = Contact::withTrashed()->get();
+        $address = Address::withTrashed()->with('contact.user')->get();
 
         return Inertia::render('admins/address/create', [
-            'contacts' => ContactResource::collection($contacts),
+            'address' => AddressResource::collection($address),
             'success' => session('success'),
             'error' => session('error'),
         ]);
@@ -35,7 +35,7 @@ class AdminAddressController extends Controller {
 
     public function store(StoreAddressRequest $request) {
         try {
-            Address::create($request);
+            Address::create($request->validated());
 
             return redirect()->route('address.index')->with('success', 'Address created successfully.');
         } catch (\Exception $e) {
@@ -45,13 +45,21 @@ class AdminAddressController extends Controller {
         }
     }
 
-    public function show(Address $address) {
-        //
+    public function show($id) {
+        $address = Address::withTrashed()->with('contact.user')->findOrFail($id);
+
+        return Inertia::render('admins/address/show', [
+            'address' => new AddressResource($address),
+            'success' => session('success'),
+            'error' => session('error'),
+        ]);
     }
 
     public function edit(Address $address) {
+        $address->load('contact.user');
         return Inertia::render('admins/address/edit', [
             'address' => new AddressResource($address),
+            // 'users' => User::select('id', 'username')->get(),
             'success' => session('success'),
             'error' => session('error'),
         ]);
@@ -62,6 +70,27 @@ class AdminAddressController extends Controller {
     }
 
     public function destroy(Address $address) {
-        //
+        try {
+            $address->delete();
+
+            return redirect()->back()->with('success', 'Address deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to delete address.');
+        }
+    }
+
+    public function restore($id) {
+        try {
+            $address = Address::withTrashed()->findOrFail($id);
+            $address->restore();
+
+            return redirect()->back()->with('success', 'Address restored successfully.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to restore address.');
+        }
     }
 }

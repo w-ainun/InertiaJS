@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('contacts', AdminContactController::class);
         Route::patch('/contacts/{id}/restore', [AdminContactController::class, 'restore'])->name('contacts.restore');
         Route::resource('address', AdminAddressController::class);
+        Route::patch('/addresss/{id}/restore', [AdminAddressController::class, 'restore'])->name('address.restore');
         Route::resource('transactions', AdminTransactionController::class);
         Route::resource('categories', AdminCategoryController::class);
         Route::resource('items', AdminItemController::class);
