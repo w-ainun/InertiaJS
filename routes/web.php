@@ -18,6 +18,7 @@ use App\Models\Transaction;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+
     return redirect('/Homepage');
 });
 
@@ -49,7 +50,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('admins/dashboard');
         })->name('dashboard');
         Route::resource('users', AdminUserController::class);
-        Route::patch('admin/users/{user}/restore', [AdminUserController::class, 'restore'])->name('users.restore');
         Route::resource('contacts', AdminContactController::class);
         Route::patch('/contacts/{id}/restore', [AdminContactController::class, 'restore'])->name('contacts.restore');
         Route::resource('address', AdminAddressController::class);
@@ -71,7 +71,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/profile', [ProfileControllerClient::class, 'update'])->name('profile.update');
     Route::post('/profile/addresses', [ProfileControllerClient::class, 'storeAddressFromCart'])->name('profile.address.store');
 
-    // Route Pesanan Saya yang sudah diperbarui
     Route::get('/pesanan-saya', function () {
         $user = Auth::user();
         if (!$user) {

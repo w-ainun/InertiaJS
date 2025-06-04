@@ -83,7 +83,7 @@ export default function NavbarLayout({ className = "", user: initialUser = null 
             <>
               <img src="/svg/male.svg" alt="user icon" className="pr-2 h-6 w-6" />
               <Link href={route('profile.show')} className="hover:underline">
-                Halo, {user.username}
+               {user.username}
               </Link>
               <button onClick={handleLogout} className="ml-4 underline">Logout</button>
             </>
