@@ -11,14 +11,17 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ProfileControllerClient;
+use App\Http\Controllers\ItemController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Transaction;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+    return redirect('/Homepage');
+});
+
+Route::get('/', [ItemController::class, 'index'])->name('homepage');
 
 Route::get('/offers', function () {
     return Inertia::render('offers');
@@ -70,10 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Route Pesanan Saya yang sudah diperbarui
     Route::get('/pesanan-saya', function () {
-        /** @var \App\Models\User $user */
         $user = Auth::user();
-
-        // Seharusnya tidak pernah null karena ada middleware 'auth', tapi sebagai penjagaan
         if (!$user) {
             return Inertia::render('PesananSaya', [
                 'activeOrders' => [],

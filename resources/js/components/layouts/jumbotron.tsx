@@ -1,6 +1,38 @@
+import { useState } from "react";
+import { router } from "@inertiajs/react";
 import TrackingCard from '../tracking-card';
 
-export default function Jumbotron() {
+interface JumbotronProps {
+  filters?: {
+    search?: string;
+  };
+}
+
+export default function Jumbotron({ filters = {} }: JumbotronProps) {
+  const [pencarian, setPencarian] = useState(filters?.search || "");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (pencarian.trim()) {
+      router.get("/", { 
+        search: pencarian 
+      }, {
+        preserveState: true,
+        preserveScroll: false, // Changed to false to allow scrolling
+        onSuccess: () => {
+          // Scroll to search results after the page updates
+          setTimeout(() => {
+            const searchResults = document.getElementById('search-results');
+            if (searchResults) {
+              searchResults.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 100);
+        }
+      });
+    }
+  };
+
   return (
     <section aria-label="jumbotron" className="relative mx-16 mt-3 h-[38rem] overflow-hidden rounded-2xl border bg-[#FBFBFB] text-black">
       <img src="/img/klepon.png" alt="gambar klepon" className="absolute top-[60%] left-[46%] z-10 translate-x-[-50%] translate-y-[-50%]" />
@@ -28,29 +60,35 @@ export default function Jumbotron() {
         className="absolute right-20 bottom-10"
       />
 
-<div className="mt-10 ml-10 relative z-20 text-black">
-  <p>Pesan aneka kue tradisional, kudapan siap saji dan penawaran spesial lainnya!</p>
-  <h1 className="text-5xl font-bold">Cita Rasa Nusantara,</h1>
-  <div className="text-5xl font-bold text-[#51793E]">
-    <p>Tradisi dalam</p>
-    <p>Genggaman</p>
-  </div>
-  <p className="mt-5">Temukan Kelezatan dalam menu kami</p>
-  <form action="">
-    <div className="relative mt-3 h-10 w-96">
-      <input
-        type="text"
-        placeholder="e.g. klepon manis"
-        className="h-full w-full rounded-4xl border border-gray-500 px-4 py-2 font-bold"
-        maxLength={25}
-      />
-      <button type="button" className="absolute right-0 h-full rounded-4xl bg-[#51793E] px-10 py-2 font-bold text-white">
-        Search
-      </button>
-    </div>
-  </form>
-</div>
-
+      <div className="mt-10 ml-10 relative z-20 text-black">
+        <p>Pesan aneka kue tradisional, kudapan siap saji dan penawaran spesial lainnya!</p>
+        <h1 className="text-5xl font-bold">Cita Rasa Nusantara,</h1>
+        <div className="text-5xl font-bold text-[#51793E]">
+          <p>Tradisi dalam</p>
+          <p>Genggaman</p>
+        </div>
+        <p className="mt-5">Temukan Kelezatan dalam menu kami</p>
+        
+        <form onSubmit={handleSearch} className="relative">
+          <div className="relative mt-3 h-10 w-96">
+            <input
+              type="text"
+              value={pencarian}
+              onChange={(e) => setPencarian(e.target.value)}
+              placeholder="Kue"
+              className="h-full w-full rounded-4xl border border-gray-500 px-4 py-2 font-bold"
+              maxLength={25}
+            />
+            <button 
+              type="submit" 
+              className="absolute right-0 h-full rounded-4xl bg-[#51793E] px-10 py-2 font-bold text-white transition-colors hover:bg-[#3f5e30] disabled:opacity-50"
+              disabled={!pencarian.trim()}
+            >
+              Cari
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
   );
 }
