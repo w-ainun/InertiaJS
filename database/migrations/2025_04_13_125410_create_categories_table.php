@@ -10,6 +10,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('slug')->unique()->nullable(); // SEO-friendly URL identifier
+            $table->string('image_url')->nullable();
+            $table->text('description')->nullable();
+            // $table->softDeletes();
             $table->timestamps();
         });
     }

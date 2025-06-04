@@ -1,16 +1,18 @@
-import { toast } from 'sonner';
-import { useEffect } from 'react';
-import { Head, usePage } from '@inertiajs/react';
 import { BreadcrumbItem, SharedData, User } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
-import { columns } from './columns';
-import { DataTable } from '@/components/ui/data-table';
 import AppLayout from '@/components/layouts/app-layout';
+import { DataTable } from '@/components/ui/data-table';
+import { columns } from './columns';
 
-const breadcrumbs: BreadcrumbItem[] = [{
-  title: 'Users',
-  href: '/users',
-}];
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Users',
+    href: '/users',
+  },
+];
 
 export default function Users() {
   const { users, success, error } = usePage<SharedData & { users: { data: User[] } }>().props;
@@ -31,9 +33,10 @@ export default function Users() {
             data={users.data}
             searchKey="username"
             create="users"
+            hiddenColumns={['status', 'remember_token', 'created_at', 'updated_at', 'deleted_at']}
           />
         </div>
       </div>
     </AppLayout>
   );
-};
+}

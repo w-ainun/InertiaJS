@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class AdminUserController extends Controller {
     public function index() {
-        $users = User::withTrashed()->get();
+        $users = User::withTrashed()->with('contacts')->get();
 
         return Inertia::render('admins/users/index', [
             'users' => UserResource::collection($users),
@@ -48,8 +48,14 @@ class AdminUserController extends Controller {
         }
     }
 
-    public function show(User $user) {
-        //
+    public function show($id) {
+        $user = User::withTrashed()->with('contacts')->findOrFail($id);
+
+        return Inertia::render('admins/users/show', [
+            'user' => new UserResource($user),
+            'success' => session('success'),
+            'error' => session('error'),
+        ]);
     }
 
     public function edit(User $user) {
@@ -83,6 +89,24 @@ class AdminUserController extends Controller {
             Log::error($e->getMessage());
 
             return redirect()->back()->with('error', 'Failed to delete user.');
+        }
+    }
+
+    public function restore($id) {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+
+            if ($user->trashed()) {
+                $user->restore();
+
+                return redirect()->route('users.index')->with('success', 'User restored successfully.');
+            }
+
+            return redirect()->route('users.index')->with('error', 'User is not deleted.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return redirect()->route('users.index')->with('error', 'Failed to restore user.');
         }
     }
 }

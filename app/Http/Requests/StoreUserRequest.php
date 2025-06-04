@@ -27,7 +27,7 @@ class StoreUserRequest extends FormRequest
                 'string',
                 'min:10',
                 'max:25',
-                'regex:/^[a-zA-Z0-9_]+$/', // Only letters, numbers, and underscores
+                // 'regex:/^[a-zA-Z0-9_]+$/', // Only letters, numbers, and underscores
                 'unique:users,username',
             ],
             'email' => [
@@ -42,7 +42,7 @@ class StoreUserRequest extends FormRequest
                 'string',
                 'min:8',
                 'max:64',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', // Must contain uppercase, lowercase, number
+                // 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', // Must contain uppercase, lowercase, number
                 // 'confirmed', // Requires password_confirmation field
             ],
         ];
@@ -58,7 +58,7 @@ class StoreUserRequest extends FormRequest
             'username.string' => 'The username must be a valid string.',
             'username.min' => 'The username must be at least 10 characters long.',
             'username.max' => 'The username may not be greater than 25 characters.',
-            'username.regex' => 'The username may only contain letters, numbers, and underscores.',
+            // 'username.regex' => 'The username may only contain letters, numbers, and underscores.',
             'username.unique' => 'This username is already taken. Please choose a different one.',
 
             'email.required' => 'The email address is required.',
@@ -71,7 +71,7 @@ class StoreUserRequest extends FormRequest
             'password.string' => 'The password must be a valid string.',
             'password.min' => 'The password must be at least 8 characters long.',
             'password.max' => 'The password must not exceed 64 characters.',
-            'password.regex' => 'The password must contain at least one uppercase letter, one lowercase letter, and one number.',
+            // 'password.regex' => 'The password must contain at least one uppercase letter, one lowercase letter, and one number.',
             // 'password.confirmed' => 'The password confirmation does not match.',
         ];
     }

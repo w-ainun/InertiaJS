@@ -6,15 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateContactRequest extends FormRequest {
     public function authorize(): bool {
-        return false;
+        return true;
     }
 
     public function rules(): array {
         return [
             'name' => ['nullable', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'profile' => ['nullable', 'url'], // or 'string' if it's just a path
-            // 'profile' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            // 'profile' => ['nullable', 'url'], // or 'string' if it's just a path
+            'profile' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'gender' => ['nullable', 'in:MAN,WOMAN'],
             'birthday' => ['nullable', 'date'],
             'favourite' => ['nullable', 'array'],
@@ -30,10 +30,10 @@ class UpdateContactRequest extends FormRequest {
             'phone.string' => 'The phone number must be a valid string.',
             'phone.max' => 'The phone number may not exceed 20 characters.',
 
-            'profile.url' => 'The profile must be a valid URL.',
-            // 'profile.image' => 'The profile must be an image.',
-            // 'profile.mimes' => 'The profile must be a file of type: jpeg, png, jpg, gif.',
-            // 'profile.max' => 'The profile image may not be larger than 2MB.',
+            // 'profile.url' => 'The profile must be a valid URL.',
+            'profile.image' => 'The profile must be an image.',
+            'profile.mimes' => 'The profile must be a file of type: jpeg, png, jpg, gif.',
+            'profile.max' => 'The profile image may not be larger than 2MB.',
 
             'gender.in' => 'The selected gender is invalid. Please choose either MAN or WOMAN.',
             'birthday.date' => 'Please enter a valid date for the birthday.',

@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 class AdminContactController extends Controller {
     public function index() {
-        $contacts = Contact::all();
+        $contacts = Contact::withTrashed()->with('user')->get();
 
         return Inertia::render('admins/contacts/index', [
             'contacts' => ContactResource::collection($contacts),
@@ -36,8 +36,13 @@ class AdminContactController extends Controller {
     public function store(StoreContactRequest $request) {
         try {
             $validated = $request->validated();
-            Contact::create($validated);
 
+            if ($request->hasFile('profile')) {
+                $profileUrl = $request->file('profile')->store('contacts', 'public');
+                $validated['profile'] = $profileUrl;
+            }
+
+            Contact::create($validated);
             return redirect()->route('contacts.index')->with('success', 'Contact created successfully.');
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -46,12 +51,19 @@ class AdminContactController extends Controller {
         }
     }
 
-    public function show(Contact $contact) {
-        //
+    public function show($id) {
+        $contact = Contact::withTrashed()->with('user')->findOrFail($id);
+
+        return Inertia::render('admins/contacts/show', [
+            'contacts' => new ContactResource($contact),
+            'success' => session('success'),
+            'error' => session('error'),
+        ]);
     }
 
     public function edit(Contact $contact) {
-        $contact->load('user'); // Eager load relasi 'user'
+        $contact->load('user');
+
         return Inertia::render('admins/contacts/edit', [
             'contacts' => new ContactResource($contact),
             'users' => User::select('id', 'username')->get(),
@@ -68,8 +80,6 @@ class AdminContactController extends Controller {
                 $path = $request->file('profile')->store('profiles', 'public');
                 $validated['profile'] = $path;
             }
-
-            $validated['favourite'] = json_encode($validated['favourite']);
             $contact->update($validated);
 
             return redirect()->route('contacts.index')->with('success', 'Contact updated successfully.');
@@ -88,6 +98,19 @@ class AdminContactController extends Controller {
             Log::error($e->getMessage());
 
             return redirect()->back()->with('error', 'Failed to delete contact.');
+        }
+    }
+
+    public function restore($id) {
+        try {
+            $contact = Contact::withTrashed()->findOrFail($id);
+            $contact->restore();
+
+            return redirect()->back()->with('success', 'Contact restored successfully.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to restore contact.');
         }
     }
 }

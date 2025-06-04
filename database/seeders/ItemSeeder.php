@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -20,7 +21,7 @@ class ItemSeeder extends Seeder
                 'price' => 3000,
                 'image_url' => '/img/dadar-gulung.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Kue Cucur',
@@ -28,7 +29,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/cucur.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Koci-Koci',
@@ -36,7 +37,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/koci-koci.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Klepon',
@@ -44,7 +45,7 @@ class ItemSeeder extends Seeder
                 'price' => 5000,
                 'image_url' => '/img/categories/kue-basah.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Kue Lumpur',
@@ -52,7 +53,7 @@ class ItemSeeder extends Seeder
                 'price' => 2500,
                 'image_url' => '/img/kue-lumpur.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Bikang Manis',
@@ -60,7 +61,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/bikang-manis.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Kue Putu',
@@ -68,7 +69,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/kue-putu.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Lemper Ayam',
@@ -76,7 +77,7 @@ class ItemSeeder extends Seeder
                 'price' => 3000,
                 'image_url' => '/img/lemper-ayam.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Kue Nagasari',
@@ -84,7 +85,7 @@ class ItemSeeder extends Seeder
                 'price' => 2500,
                 'image_url' => '/img/kue-nagasari.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Kue Lapis',
@@ -92,7 +93,7 @@ class ItemSeeder extends Seeder
                 'price' => 2000,
                 'image_url' => '/img/kue-lapis.png',
                 'category_slug' => 'kue-basah',
-                'expired_at' => Carbon::now()->addMonths(6)->toDateString(),
+                'expired_at' => fake()->dateTime(),
             ],
             [
                 'name' => 'Semprong renyah',
@@ -476,7 +477,5 @@ class ItemSeeder extends Seeder
                 'updated_at' => now(),
             ]);
         }
-
-        echo "Seeder manual selesai dijalankan.\n";
     }
 }
