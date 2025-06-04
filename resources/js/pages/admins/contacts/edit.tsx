@@ -11,19 +11,19 @@ import Input from '@/components/elements/input';
 import InputError from '@/components/elements/input-error';
 import Label from '@/components/elements/label';
 import Separator from '@/components/elements/separator';
+import Card from '@/components/fragments/card/card';
+import CardContent from '@/components/fragments/card/card-content';
+import CardDescription from '@/components/fragments/card/card-description';
+import CardHeader from '@/components/fragments/card/card-header';
+import CardTitle from '@/components/fragments/card/card-title';
 import AppLayout from '@/components/layouts/app-layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Combobox } from '@/components/ui/combobox';
 import DatePicker from '@/components/ui/date-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Card from '@/components/fragments/card/card';
-import CardHeader from '@/components/fragments/card/card-header';
-import CardTitle from '@/components/fragments/card/card-title';
-import CardDescription from '@/components/fragments/card/card-description';
-import CardContent from '@/components/fragments/card/card-content';
-import { Combobox } from '@/components/ui/combobox';
 
 export default function ContactsEdit() {
   const { contacts, users, success, error } = usePage<
@@ -38,7 +38,7 @@ export default function ContactsEdit() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [favouriteInput, setFavouriteInput] = useState('');
 
-  const { data, setData, put, processing, errors } = useForm({
+  const { data, setData, post, processing, errors } = useForm({
     user_id: contacts.data.user_id || '',
     name: contacts.data.name || '',
     phone: contacts.data.phone || '',
@@ -46,6 +46,7 @@ export default function ContactsEdit() {
     gender: contacts.data.gender || '',
     birthday: contacts.data.birthday || '',
     favourite: contacts.data.favourite || [],
+    _method: 'put',
   });
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -63,8 +64,9 @@ export default function ContactsEdit() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    put(route('contacts.update', contacts.data.id), {
-      forceFormData: true,
+    console.log(data);
+    post(route('contacts.update', contacts.data.id), {
+      // forceFormData: true,
       onSuccess: () => {
         toast.success('Contact updated successfully');
       },
@@ -106,7 +108,9 @@ export default function ContactsEdit() {
 
   const addFavourite = () => {
     if (favouriteInput.trim() && !data.favourite.includes(favouriteInput.trim())) {
-      setData('favourite', [...data.favourite, favouriteInput.trim()]);
+      const newFavourites = [...data.favourite, favouriteInput.trim()];
+      console.log('Updating favourite:', newFavourites);
+      setData('favourite', newFavourites);
       setFavouriteInput('');
     }
   };
@@ -114,13 +118,6 @@ export default function ContactsEdit() {
   const removeFavourite = (index: number) => {
     const newFavourites = data.favourite.filter((_, i) => i !== index);
     setData('favourite', newFavourites);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addFavourite();
-    }
   };
 
   useEffect(() => {
@@ -402,10 +399,7 @@ export default function ContactsEdit() {
                         <Calendar className="text-muted-foreground mr-2 h-4 w-4" />
                         Birthday
                       </Label>
-                      <DatePicker
-                        date={data.birthday ? new Date(data.birthday) : undefined}
-                        setDate={(date) => setData('birthday', date!)}
-                      />
+                      <DatePicker date={data.birthday ? new Date(data.birthday) : undefined} setDate={(date) => setData('birthday', date!)} />
                       {errors.birthday && <InputError message={errors.birthday} />}
                       <p className="text-muted-foreground text-xs">Select the contact's birth date</p>
                     </div>
@@ -422,7 +416,12 @@ export default function ContactsEdit() {
                         placeholder="Add a favorite food..."
                         value={favouriteInput}
                         onChange={(e) => setFavouriteInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addFavourite();
+                          }
+                        }}
                         className="flex-1"
                       />
                       <Button type="button" onClick={addFavourite} disabled={!favouriteInput.trim()} className="flex items-center gap-1">
@@ -481,6 +480,7 @@ export default function ContactsEdit() {
                       gender: contacts.data.gender || 'MAN',
                       birthday: contacts.data.birthday || '',
                       favourite: contacts.data.favourite || [],
+                      _method: 'PUT',
                     });
                     setImagePreview(contacts.data.profile ? `/storage/${contacts.data.profile}` : null);
                   }}

@@ -1,5 +1,3 @@
-'use client';
-
 import type { Address, BreadcrumbItem, Contact, SharedData } from '@/types';
 import { router, useForm, usePage } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
@@ -34,17 +32,20 @@ export default function AddressesEdit() {
     }
   >().props;
 
+  console.log(address)
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('contact');
 
-  const { data, setData, put, processing, errors } = useForm({
-    contact_id: address.data.contact_id || '',
+  const { data, setData, post, processing, errors } = useForm({
+    contact_id: address.data.contact_id || 0,
     street: address.data.street || '',
     more: address.data.more || '',
     city: address.data.city || '',
     province: address.data.province || '',
     country: address.data.country || 'Indonesia',
     post_code: address.data.post_code || '',
+    _method: 'put',
   });
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -62,7 +63,7 @@ export default function AddressesEdit() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    put(route('address.update', address.data.id), {
+    post(route('address.update', address.data.id), {
       onSuccess: () => {
         toast.success('Address updated successfully');
       },
@@ -202,9 +203,9 @@ export default function AddressesEdit() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <div className="container mx-auto max-w-5xl px-4 py-8">
+      <div className="container px-4 py-8">
         <Card className="border shadow-sm">
-          <CardHeader className="bg-muted/40">
+          <CardHeader>
             <div className="flex items-center gap-3">
               <div className="bg-primary/10 rounded-full p-2">
                 <MapPin className="text-primary h-6 w-6" />
@@ -324,11 +325,12 @@ export default function AddressesEdit() {
                         <Combobox
                           options={contactOptions}
                           value={String(data.contact_id)}
-                          onValueChange={(value) => setData('contact_id', value)}
+                          onValueChange={(value) => setData('contact_id',  Number(value))}
                           placeholder="Search and select a contact..."
                           searchPlaceholder="Search contacts by name, phone, or owner..."
                           emptyText="No contacts found."
                           className="max-w-md"
+                          editMode
                         />
                       ) : (
                         <div className="text-muted-foreground rounded-md border p-4 text-sm">
@@ -608,13 +610,14 @@ export default function AddressesEdit() {
                   variant="ghost"
                   onClick={() => {
                     setData({
-                      contact_id: address.data.contact_id || '',
+                      contact_id: address.data.contact_id || 0,
                       street: address.data.street || '',
                       more: address.data.more || '',
                       city: address.data.city || '',
                       province: address.data.province || '',
                       country: address.data.country || 'Indonesia',
                       post_code: address.data.post_code || '',
+                      _method: 'PUT',
                     });
                   }}
                   disabled={processing || isSubmitting}

@@ -24,10 +24,10 @@ class AdminAddressController extends Controller {
     }
 
     public function create() {
-        $address = Address::withTrashed()->with('contact.user')->get();
+        $contacts = Contact::withTrashed()->with('user')->get();
 
         return Inertia::render('admins/address/create', [
-            'address' => AddressResource::collection($address),
+            'contacts' => ContactResource::collection($contacts),
             'success' => session('success'),
             'error' => session('error'),
         ]);
@@ -57,6 +57,7 @@ class AdminAddressController extends Controller {
 
     public function edit(Address $address) {
         $address->load('contact.user');
+
         return Inertia::render('admins/address/edit', [
             'address' => new AddressResource($address),
             // 'users' => User::select('id', 'username')->get(),
@@ -66,7 +67,20 @@ class AdminAddressController extends Controller {
     }
 
     public function update(UpdateAddressRequest $request, Address $address) {
-        //
+        try {
+            $validated = $request->validated();
+
+            if ($request->hasFile('profile')) {
+                $path = $request->file('profile')->store('profiles', 'public');
+                $validated['profile'] = $path;
+            }
+            $address->update($validated);
+
+            return redirect()->route('address.index')->with('success', 'Address updated successfully.');
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update Address.');
+        }
     }
 
     public function destroy(Address $address) {

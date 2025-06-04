@@ -1,197 +1,206 @@
-'use client';
+import type { BreadcrumbItem, Contact, SharedData } from "@/types"
+import { useForm, usePage } from "@inertiajs/react"
+import {
+  Building,
+  ChevronLeft,
+  Globe,
+  Home,
+  Info,
+  LoaderCircle,
+  Mail,
+  MapPin,
+  Navigation,
+  Plus,
+  Search,
+  User,
+  Users,
+} from "lucide-react"
+import type React from "react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
-import type { Address, BreadcrumbItem, Contact, SharedData } from '@/types';
-import { useForm, usePage } from '@inertiajs/react';
-import { Building, ChevronLeft, Globe, Home, Info, LoaderCircle, Mail, MapPin, Navigation, Plus, Search, User, Users } from 'lucide-react';
-import type React from 'react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-
-import { Button } from '@/components/elements/button';
-import Input from '@/components/elements/input';
-import InputError from '@/components/elements/input-error';
-import Label from '@/components/elements/label';
-import Separator from '@/components/elements/separator';
-import Card from '@/components/fragments/card/card';
-import CardContent from '@/components/fragments/card/card-content';
-import CardDescription from '@/components/fragments/card/card-description';
-import CardHeader from '@/components/fragments/card/card-header';
-import CardTitle from '@/components/fragments/card/card-title';
-import AppLayout from '@/components/layouts/app-layout';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Combobox } from '@/components/ui/combobox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from "@/components/elements/button"
+import Input from "@/components/elements/input"
+import InputError from "@/components/elements/input-error"
+import Label from "@/components/elements/label"
+import Separator from "@/components/elements/separator"
+import Card from "@/components/fragments/card/card"
+import CardContent from "@/components/fragments/card/card-content"
+import CardDescription from "@/components/fragments/card/card-description"
+import CardHeader from "@/components/fragments/card/card-header"
+import CardTitle from "@/components/fragments/card/card-title"
+import AppLayout from "@/components/layouts/app-layout"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Combobox } from "@/components/ui/combobox"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function AddressesCreate() {
-  const { address, success, error } = usePage<SharedData & { address: { data: Address[] } }>().props;
+  const { contacts, success, error } = usePage<SharedData & { contacts: { data: Contact[] } }>().props
+  console.log(contacts)
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState('contact');
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState("contact")
 
   const { data, setData, post, processing, errors, reset } = useForm({
-    contact_id: '',
-    street: '',
-    more: '',
-    city: '',
-    province: '',
-    country: 'Indonesia',
-    post_code: '',
-  });
+    contact_id: 0,
+    street: "",
+    more: "",
+    city: "",
+    province: "",
+    country: "Indonesia",
+    post_code: "",
+  })
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: 'Addresses',
-      href: route('address.index'),
+      title: "Addresses",
+      href: route("address.index"),
     },
     {
-      title: 'Create',
-      href: route('address.create'),
+      title: "Create",
+      href: route("address.create"),
     },
-  ];
+  ]
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
 
-    post(route('address.store'), {
+    post(route("address.store"), {
       onSuccess: () => {
-        toast.success('Address created successfully');
-        reset('contact_id', 'street', 'more', 'city', 'province', 'country', 'post_code');
+        toast.success("Address created successfully")
+        reset("contact_id", "street", "more", "city", "province", "country", "post_code")
       },
       onError: (errors) => {
-        console.error(errors);
-        toast.error('Failed to create address');
+        console.error(errors)
+        toast.error("Failed to create address")
 
         // Switch to the tab that contains errors
         if (errors.contact_id) {
-          setActiveTab('contact');
+          setActiveTab("contact")
         } else if (errors.street || errors.more) {
-          setActiveTab('street');
+          setActiveTab("street")
         } else if (errors.city || errors.province || errors.country || errors.post_code) {
-          setActiveTab('location');
+          setActiveTab("location")
         }
       },
       onFinish: () => {
-        setIsSubmitting(false);
+        setIsSubmitting(false)
       },
-    });
-  };
+    })
+  }
 
   useEffect(() => {
-    if (success) toast.success(success as string);
-    if (error) toast.error(error as string);
-  }, [success, error]);
+    if (success) toast.success(success as string)
+    if (error) toast.error(error as string)
+  }, [success, error])
 
   // Helper function to get initials
   const getInitials = (name: string): string => {
-    if (!name) return 'NC';
+    if (!name) return "NC"
     return name
-      .split(' ')
+      .split(" ")
       .map((word) => word.charAt(0))
-      .join('')
+      .join("")
       .toUpperCase()
-      .slice(0, 2);
-  };
+      .slice(0, 2)
+  }
 
   // Helper function to format phone number
   const formatPhoneNumber = (phone: string): string => {
-    if (phone.startsWith('08')) {
-      const cleaned = phone.replace(/\D/g, '');
+    if (phone.startsWith("08")) {
+      const cleaned = phone.replace(/\D/g, "")
       if (cleaned.length >= 10) {
-        return `+62 ${cleaned.substring(1, 4)}-${cleaned.substring(4, 8)}-${cleaned.substring(8)}`;
+        return `+62 ${cleaned.substring(1, 4)}-${cleaned.substring(4, 8)}-${cleaned.substring(8)}`
       }
     }
-    return phone;
-  };
+    return phone
+  }
 
-  // Extract unique contacts from address data
-  const uniqueContacts = address.data.reduce<Contact[]>((acc, addressItem) => {
-    const contact = addressItem.contact;
-    if (contact && !acc.find((c) => c.id === contact.id)) {
-      acc.push(contact);
-    }
-    return acc;
-  }, []);
+  // Extract contacts from the contacts data (fixed the main issue here)
+  const availableContacts = contacts?.data || []
 
   // Prepare contact options for combobox
-  const contactOptions = uniqueContacts.map((contact) => ({
+  const contactOptions = availableContacts.map((contact) => ({
     value: String(contact.id),
     label: contact.name,
-    description: `${formatPhoneNumber(contact.phone)} • ${contact.user?.username || 'No owner'}`,
+    description: `${formatPhoneNumber(contact.phone)} • ${contact.user?.username || "No owner"}`,
     avatar: contact.profile ? contact.profile : undefined,
-  }));
+  }))
+
+  console.log(contactOptions)
 
   // Get selected contact info
-  const selectedContact = uniqueContacts.find((contact) => String(contact.id) === String(data.contact_id));
+  const selectedContact = availableContacts.find((contact) => String(contact.id) === String(data.contact_id))
 
   // Indonesian provinces for autocomplete
   const indonesianProvinces = [
-    'Aceh',
-    'Sumatera Utara',
-    'Sumatera Barat',
-    'Riau',
-    'Kepulauan Riau',
-    'Jambi',
-    'Sumatera Selatan',
-    'Bangka Belitung',
-    'Bengkulu',
-    'Lampung',
-    'DKI Jakarta',
-    'Jawa Barat',
-    'Jawa Tengah',
-    'DI Yogyakarta',
-    'Jawa Timur',
-    'Banten',
-    'Bali',
-    'Nusa Tenggara Barat',
-    'Nusa Tenggara Timur',
-    'Kalimantan Barat',
-    'Kalimantan Tengah',
-    'Kalimantan Selatan',
-    'Kalimantan Timur',
-    'Kalimantan Utara',
-    'Sulawesi Utara',
-    'Sulawesi Tengah',
-    'Sulawesi Selatan',
-    'Sulawesi Tenggara',
-    'Gorontalo',
-    'Sulawesi Barat',
-    'Maluku',
-    'Maluku Utara',
-    'Papua',
-    'Papua Barat',
-    'Papua Selatan',
-    'Papua Tengah',
-    'Papua Pegunungan',
-    'Papua Barat Daya',
-  ];
+    "Aceh",
+    "Sumatera Utara",
+    "Sumatera Barat",
+    "Riau",
+    "Kepulauan Riau",
+    "Jambi",
+    "Sumatera Selatan",
+    "Bangka Belitung",
+    "Bengkulu",
+    "Lampung",
+    "DKI Jakarta",
+    "Jawa Barat",
+    "Jawa Tengah",
+    "DI Yogyakarta",
+    "Jawa Timur",
+    "Banten",
+    "Bali",
+    "Nusa Tenggara Barat",
+    "Nusa Tenggara Timur",
+    "Kalimantan Barat",
+    "Kalimantan Tengah",
+    "Kalimantan Selatan",
+    "Kalimantan Timur",
+    "Kalimantan Utara",
+    "Sulawesi Utara",
+    "Sulawesi Tengah",
+    "Sulawesi Selatan",
+    "Sulawesi Tenggara",
+    "Gorontalo",
+    "Sulawesi Barat",
+    "Maluku",
+    "Maluku Utara",
+    "Papua",
+    "Papua Barat",
+    "Papua Selatan",
+    "Papua Tengah",
+    "Papua Pegunungan",
+    "Papua Barat Daya",
+  ]
 
   // Common countries
   const countries = [
-    'Indonesia',
-    'Malaysia',
-    'Singapore',
-    'Thailand',
-    'Philippines',
-    'Vietnam',
-    'Brunei',
-    'Myanmar',
-    'Cambodia',
-    'Laos',
-    'United States',
-    'United Kingdom',
-    'Australia',
-    'Japan',
-    'South Korea',
-    'China',
-    'India',
-    'Germany',
-    'France',
-    'Netherlands',
-  ];
+    "Indonesia",
+    "Malaysia",
+    "Singapore",
+    "Thailand",
+    "Philippines",
+    "Vietnam",
+    "Brunei",
+    "Myanmar",
+    "Cambodia",
+    "Laos",
+    "United States",
+    "United Kingdom",
+    "Australia",
+    "Japan",
+    "South Korea",
+    "China",
+    "India",
+    "Germany",
+    "France",
+    "Netherlands",
+  ]
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -204,7 +213,9 @@ export default function AddressesCreate() {
               </div>
               <div>
                 <CardTitle className="text-2xl">Create New Address</CardTitle>
-                <CardDescription className="mt-1">Add a new address for a contact with complete location information</CardDescription>
+                <CardDescription className="mt-1">
+                  Add a new address for a contact with complete location information
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -214,7 +225,7 @@ export default function AddressesCreate() {
             <div className="bg-muted/20 border-b px-6 py-4">
               <div className="flex items-center gap-4">
                 <Avatar className="border-border h-12 w-12 border-2">
-                  <AvatarImage src={selectedContact.profile || '/placeholder.svg'} alt={selectedContact.name} />
+                  <AvatarImage src={selectedContact.profile || "/placeholder.svg"} alt={selectedContact.name} />
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 font-semibold text-white">
                     {getInitials(selectedContact.name)}
                   </AvatarFallback>
@@ -222,8 +233,8 @@ export default function AddressesCreate() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold">{selectedContact.name}</h3>
-                    <Badge variant={selectedContact.gender === 'MAN' ? 'info' : 'purple'}>
-                      {selectedContact.gender === 'MAN' ? 'Male' : 'Female'}
+                    <Badge variant={selectedContact.gender === "MAN" ? "default" : "secondary"}>
+                      {selectedContact.gender === "MAN" ? "Male" : "Female"}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground text-sm">{formatPhoneNumber(selectedContact.phone)}</p>
@@ -266,7 +277,8 @@ export default function AddressesCreate() {
                     <Users className="h-4 w-4" />
                     <AlertTitle>Contact Selection</AlertTitle>
                     <AlertDescription>
-                      Select the contact for whom you want to create this address. You can search by name, phone, or owner information.
+                      Select the contact for whom you want to create this address. You can search by name, phone, or
+                      owner information.
                     </AlertDescription>
                   </Alert>
 
@@ -280,7 +292,7 @@ export default function AddressesCreate() {
                         <Combobox
                           options={contactOptions}
                           value={String(data.contact_id)}
-                          onValueChange={(value) => setData('contact_id', value)}
+                          onValueChange={(value) => setData("contact_id", Number(value))}
                           placeholder="Search and select a contact..."
                           searchPlaceholder="Search contacts by name, phone, or owner..."
                           emptyText="No contacts found."
@@ -292,7 +304,9 @@ export default function AddressesCreate() {
                         </div>
                       )}
                       {errors.contact_id && <InputError id="contact_id-error" message={errors.contact_id} />}
-                      <p className="text-muted-foreground text-xs">Select the contact who will be associated with this address</p>
+                      <p className="text-muted-foreground text-xs">
+                        Select the contact who will be associated with this address
+                      </p>
                     </div>
 
                     {selectedContact && (
@@ -315,8 +329,8 @@ export default function AddressesCreate() {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Gender:</span>
-                              <Badge variant={selectedContact.gender === 'MAN' ? 'info' : 'purple'}>
-                                {selectedContact.gender === 'MAN' ? 'Male' : 'Female'}
+                              <Badge variant={selectedContact.gender === "MAN" ? "default" : "secondary"}>
+                                {selectedContact.gender === "MAN" ? "Male" : "Female"}
                               </Badge>
                             </div>
                             {selectedContact.user && (
@@ -340,8 +354,8 @@ export default function AddressesCreate() {
                     <Home className="h-4 w-4" />
                     <AlertTitle>Street Address Information</AlertTitle>
                     <AlertDescription>
-                      Enter the detailed street address including house number, street name, and any additional information like RT/RW, building name,
-                      or landmarks.
+                      Enter the detailed street address including house number, street name, and any additional
+                      information like RT/RW, building name, or landmarks.
                     </AlertDescription>
                   </Alert>
 
@@ -357,13 +371,15 @@ export default function AddressesCreate() {
                         type="text"
                         placeholder="e.g., Jl. Merdeka No. 123"
                         value={data.street}
-                        onChange={(e) => setData('street', e.target.value)}
-                        aria-invalid={errors.street ? 'true' : 'false'}
-                        aria-describedby={errors.street ? 'street-error' : undefined}
+                        onChange={(e) => setData("street", e.target.value)}
+                        aria-invalid={errors.street ? "true" : "false"}
+                        aria-describedby={errors.street ? "street-error" : undefined}
                         required
                       />
                       {errors.street && <InputError id="street-error" message={errors.street} />}
-                      <p className="text-muted-foreground text-xs">Enter the complete street address including house/building number</p>
+                      <p className="text-muted-foreground text-xs">
+                        Enter the complete street address including house/building number
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -376,13 +392,15 @@ export default function AddressesCreate() {
                         name="more"
                         placeholder="e.g., RT 01/RW 02, Komplek ABC, Dekat Masjid Al-Ikhlas"
                         value={data.more}
-                        onChange={(e) => setData('more', e.target.value)}
-                        aria-invalid={errors.more ? 'true' : 'false'}
-                        aria-describedby={errors.more ? 'more-error' : undefined}
+                        onChange={(e) => setData("more", e.target.value)}
+                        aria-invalid={errors.more ? "true" : "false"}
+                        aria-describedby={errors.more ? "more-error" : undefined}
                         rows={3}
                       />
                       {errors.more && <InputError id="more-error" message={errors.more} />}
-                      <p className="text-muted-foreground text-xs">Additional details like RT/RW, complex name, landmarks, or special instructions</p>
+                      <p className="text-muted-foreground text-xs">
+                        Additional details like RT/RW, complex name, landmarks, or special instructions
+                      </p>
                     </div>
 
                     {/* Address Preview */}
@@ -413,8 +431,8 @@ export default function AddressesCreate() {
                     <Globe className="h-4 w-4" />
                     <AlertTitle>Location Details</AlertTitle>
                     <AlertDescription>
-                      Specify the city, province, country, and postal code for this address. This information is used for mapping and delivery
-                      purposes.
+                      Specify the city, province, country, and postal code for this address. This information is used
+                      for mapping and delivery purposes.
                     </AlertDescription>
                   </Alert>
 
@@ -430,9 +448,9 @@ export default function AddressesCreate() {
                         type="text"
                         placeholder="e.g., Jakarta, Surabaya, Bandung"
                         value={data.city}
-                        onChange={(e) => setData('city', e.target.value)}
-                        aria-invalid={errors.city ? 'true' : 'false'}
-                        aria-describedby={errors.city ? 'city-error' : undefined}
+                        onChange={(e) => setData("city", e.target.value)}
+                        aria-invalid={errors.city ? "true" : "false"}
+                        aria-describedby={errors.city ? "city-error" : undefined}
                         required
                       />
                       {errors.city && <InputError id="city-error" message={errors.city} />}
@@ -450,9 +468,9 @@ export default function AddressesCreate() {
                         type="text"
                         placeholder="e.g., Jawa Timur, DKI Jakarta"
                         value={data.province}
-                        onChange={(e) => setData('province', e.target.value)}
-                        aria-invalid={errors.province ? 'true' : 'false'}
-                        aria-describedby={errors.province ? 'province-error' : undefined}
+                        onChange={(e) => setData("province", e.target.value)}
+                        aria-invalid={errors.province ? "true" : "false"}
+                        aria-describedby={errors.province ? "province-error" : undefined}
                         list="provinces"
                         required
                       />
@@ -476,9 +494,9 @@ export default function AddressesCreate() {
                         type="text"
                         placeholder="e.g., Indonesia"
                         value={data.country}
-                        onChange={(e) => setData('country', e.target.value)}
-                        aria-invalid={errors.country ? 'true' : 'false'}
-                        aria-describedby={errors.country ? 'country-error' : undefined}
+                        onChange={(e) => setData("country", e.target.value)}
+                        aria-invalid={errors.country ? "true" : "false"}
+                        aria-describedby={errors.country ? "country-error" : undefined}
                         list="countries"
                         required
                       />
@@ -502,9 +520,9 @@ export default function AddressesCreate() {
                         type="text"
                         placeholder="e.g., 12345"
                         value={data.post_code}
-                        onChange={(e) => setData('post_code', e.target.value)}
-                        aria-invalid={errors.post_code ? 'true' : 'false'}
-                        aria-describedby={errors.post_code ? 'post_code-error' : undefined}
+                        onChange={(e) => setData("post_code", e.target.value)}
+                        aria-invalid={errors.post_code ? "true" : "false"}
+                        aria-describedby={errors.post_code ? "post_code-error" : undefined}
                         className="font-mono"
                         required
                       />
@@ -525,13 +543,17 @@ export default function AddressesCreate() {
                       <CardContent>
                         <div className="space-y-1 text-sm">
                           <p className="font-medium">
-                            {[data.street, data.more, data.city, data.province, data.country, data.post_code].filter(Boolean).join(', ')}
+                            {[data.street, data.more, data.city, data.province, data.country, data.post_code]
+                              .filter(Boolean)
+                              .join(", ")}
                           </p>
                           {data.street && data.city && data.country && (
                             <Button variant="link" size="sm" className="h-auto p-0 text-xs" asChild>
                               <a
                                 href={`https://maps.google.com/?q=${encodeURIComponent(
-                                  [data.street, data.more, data.city, data.province, data.country].filter(Boolean).join(', '),
+                                  [data.street, data.more, data.city, data.province, data.country]
+                                    .filter(Boolean)
+                                    .join(", "),
                                 )}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -553,7 +575,12 @@ export default function AddressesCreate() {
             <Separator />
 
             <div className="flex items-center justify-between p-6">
-              <Button type="button" variant="outline" onClick={() => window.history.back()} className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.history.back()}
+                className="flex items-center gap-2"
+              >
                 <ChevronLeft className="h-4 w-4" />
                 Back to Addresses
               </Button>
@@ -563,7 +590,7 @@ export default function AddressesCreate() {
                   type="button"
                   variant="ghost"
                   onClick={() => {
-                    reset('contact_id', 'street', 'more', 'city', 'province', 'country', 'post_code');
+                    reset("contact_id", "street", "more", "city", "province", "country", "post_code")
                   }}
                   disabled={processing || isSubmitting}
                 >
@@ -589,5 +616,5 @@ export default function AddressesCreate() {
         </Card>
       </div>
     </AppLayout>
-  );
+  )
 }

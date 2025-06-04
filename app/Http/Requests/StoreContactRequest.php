@@ -14,11 +14,11 @@ class StoreContactRequest extends FormRequest {
             'user_id' => ['required'],
             'name' => ['required', 'string', 'max:100'],
             'phone' => ['required', 'string', 'max:20'],
-            // 'profile' => ['nullable', 'url'], // ganti ke image jika pakai upload file
+            // 'profile' => ['nullable', 'url'],
             'profile' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
             'gender' => ['required', 'in:MAN,WOMAN'],
             'birthday' => ['nullable', 'date'],
-            'favourite' => ['nullable', 'array'],
+            'favourite' => ['required', 'array'],
             'favourite.*' => ['string', 'max:50'],
         ];
     }
@@ -36,6 +36,7 @@ class StoreContactRequest extends FormRequest {
             'phone.max' => 'The phone number may not exceed 20 characters.',
 
             // 'profile.url' => 'The profile must be a valid URL.',
+            // 'profile.required' => 'Profile is required.',
             'profile.image' => 'The profile must be an image.',
             'profile.mimes' => 'The profile must be a file of type: jpeg, png, jpg, gif.',
             'profile.max' => 'The profile image may not be larger than 5MB.',
@@ -43,6 +44,7 @@ class StoreContactRequest extends FormRequest {
             'gender.required' => 'Gender is required.',
             'gender.in' => 'The selected gender is invalid. Please choose either MAN or WOMAN.',
 
+            // 'birthday.required' => 'Birthday is required.',
             'birthday.date' => 'Please enter a valid date for the birthday.',
 
             'favourite.array' => 'The favourite field must be an array.',

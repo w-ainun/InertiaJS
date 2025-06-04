@@ -22,6 +22,7 @@ interface ComboboxProps {
   emptyText?: string
   className?: string
   disabled?: boolean
+  editMode?: boolean;
 }
 
 export function Combobox({
@@ -33,10 +34,21 @@ export function Combobox({
   emptyText = "No option found.",
   className,
   disabled = false,
+  editMode = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
   const selectedOption = options.find((option) => option.value === value)
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  React.useEffect(() => {
+    const selectedOption = options.find((opt) => opt.value === value);
+    setSearchTerm(selectedOption ? selectedOption.label : "");
+  }, [value, options]);
+
+  const filteredOptions = options.filter((opt) =>
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -52,7 +64,7 @@ export function Combobox({
             <div className="flex items-center gap-2">
               {selectedOption.avatar && (
                 <img
-                  src={selectedOption.avatar || "/placeholder.svg"}
+                  src={`${editMode ? '' : '/storage/'}${selectedOption.avatar}`}
                   alt=""
                   className="h-5 w-5 rounded-full object-cover"
                 />
@@ -67,23 +79,29 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} className="h-9" />
+          <CommandInput
+            placeholder={searchPlaceholder}
+            className="h-9"
+            value={searchTerm}
+            onInput={(e) => setSearchTerm((e.target as HTMLInputElement).value)}
+          />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? "" : currentValue)
+                  value={option.label.toString()}
+                  onSelect={() => {
+                    onValueChange(option.value)
+                    setSearchTerm(option.label)
                     setOpen(false)
                   }}
                 >
                   <div className="flex items-center gap-2 flex-1">
                     {option.avatar && (
                       <img
-                        src={option.avatar || "/placeholder.svg"}
+                        src={`${editMode ? '' : '/storage/'}${option.avatar}`}
                         alt=""
                         className="h-6 w-6 rounded-full object-cover"
                       />

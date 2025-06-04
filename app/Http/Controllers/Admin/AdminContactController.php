@@ -62,7 +62,8 @@ class AdminContactController extends Controller {
     }
 
     public function edit(Contact $contact) {
-        $contact->load('user'); // Eager load relasi 'user'
+        $contact->load('user');
+
         return Inertia::render('admins/contacts/edit', [
             'contacts' => new ContactResource($contact),
             'users' => User::select('id', 'username')->get(),
@@ -79,8 +80,6 @@ class AdminContactController extends Controller {
                 $path = $request->file('profile')->store('profiles', 'public');
                 $validated['profile'] = $path;
             }
-
-            $validated['favourite'] = json_encode($validated['favourite']);
             $contact->update($validated);
 
             return redirect()->route('contacts.index')->with('success', 'Contact updated successfully.');
