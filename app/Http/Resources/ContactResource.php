@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Address;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,6 +21,7 @@ class ContactResource extends JsonResource {
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at,
             'user' => new UserResource($this->whenLoaded('user')),
+            'addresses' => AddressResource::collection($this->whenLoaded('addresses')),
         ];
     }
 }

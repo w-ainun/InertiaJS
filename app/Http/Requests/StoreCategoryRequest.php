@@ -11,18 +11,19 @@ class StoreCategoryRequest extends FormRequest {
 
     public function rules(): array {
         return [
-            'name'        => 'required|string|max:255',
-            'image_url'   => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
-            'description' => 'nullable|string',
+            'name'        => ['required', 'string', 'max:255'],
+            'image_url'   => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
+            'description' => ['nullable', 'string'],
         ];
     }
 
     public function messages(): array {
         return [
-            'name.required'   => 'The category name is required.',
-            'image_url.file'  => 'The uploaded image must be a valid file.',
-            'image_url.mimes' => 'The image must be in JPEG, PNG, JPG, or WEBP format.',
-            'image_url.max'   => 'The image may not be greater than 2MB.',
+            'name.required'      => 'The category name is required.',
+            'image_url.required' => 'Category image is Required',
+            'image_url.image'    => 'The uploaded image must be a valid image.',
+            'image_url.mimes'    => 'The image must be in JPEG, PNG, JPG, or WEBP format.',
+            'image_url.max'      => 'The image may not be greater than 5MB.',
         ];
     }
 }

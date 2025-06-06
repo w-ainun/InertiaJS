@@ -353,11 +353,6 @@ export default function ProfilePage({ user, contacts: initialContacts, flash, er
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Informasi Akun Pengguna</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
-                  <input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} className={inputClassName} placeholder="Seinal Arifin"/>
-                  {typedErrors.name && <p className={errorClassName}>{typedErrors.name}</p>}
-                </div>
-                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                   <input type="text" value={data.username} onChange={(e) => setData('username', e.target.value)} className={inputClassName} placeholder="Seinal"/>
                   {typedErrors.username && <p className={errorClassName}>{typedErrors.username}</p>}

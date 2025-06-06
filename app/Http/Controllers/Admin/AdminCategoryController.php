@@ -29,11 +29,12 @@ class AdminCategoryController extends Controller {
     }
 
     public function store(StoreCategoryRequest $request) {
+        // dd($request->all());
         try {
             $validated = $request->validated();
 
             if ($request->hasFile('image_url')) {
-                $imageUrl = $request->file('image_url')->store('categories', 'public');
+                $imageUrl = $request->file('image_url')->store('img/categories', 'public');
                 $validated['image_url'] = $imageUrl;
             }
 
@@ -70,7 +71,7 @@ class AdminCategoryController extends Controller {
 
 
             if ($request->hasFile('image_url')) {
-                $path = $request->file('image_url')->store('categories', 'public');
+                $path = $request->file('image_url')->store('img/categories', 'public');
                 $validated['image_url'] = $path;
             }
             $category->update($validated);

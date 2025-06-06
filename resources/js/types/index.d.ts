@@ -85,3 +85,19 @@ export interface Category {
   created_at: string;
   updated_at: string;
 }
+
+export interface Item {
+  id: number;
+  category_id: number;
+  name: string;
+  unit: string;
+  price: number;
+  stock: number;
+  image_url: string;
+  is_available: boolean;
+  description: string;
+  discount: number;
+  expired_at: date;
+  created_at: string;
+  updated_at: string;
+}

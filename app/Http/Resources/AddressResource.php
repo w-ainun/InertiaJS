@@ -20,7 +20,6 @@ class AddressResource extends JsonResource {
             'updated_at' => $this->updated_at,
             'deleted_at' => $this->deleted_at,
             'contact' => new ContactResource($this->whenLoaded('contact')),
-            // 'user' => new UserResource(optional($this->contact)->user),
         ];
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\client\UserProfileResource;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,66 +13,27 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Address;
 use App\Models\Contact;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException; 
 
-class ProfileControllerClient extends Controller
-{
-    public function show()
-    {
-        $user = Auth::user();
-        $user->load('contacts.addresses');
-        $contacts = $user->contacts;
+class ProfileControllerClient extends Controller {
+    public function show() {
+        $auth = Auth::user();
+        $user = User::where('id', $auth->id)->with('contacts.addresses')->get();
 
         return Inertia::render('clients/ProfilePage', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'email' => $user->email,
-            ],
-            'contacts' => $contacts->map(function ($contact) {
-                return [
-                    'id' => $contact->id,
-                    'name' => $contact->name,
-                    'phone' => $contact->phone,
-                    'gender' => $contact->gender,
-                    'birthday' => $contact->birthday,
-                    'profile' => $contact->profile ? Storage::url($contact->profile) : null,
-                    'addresses' => $contact->addresses->map(function ($address) {
-                        return [
-                            'id' => $address->id,
-                            'post_code' => $address->post_code,
-                            'country' => $address->country,
-                            'province' => $address->province,
-                            'city' => $address->city,
-                            'street' => $address->street,
-                            'more' => $address->more,
-                            'summary' => trim(implode(', ', array_filter([
-                                $address->street, $address->more, $address->city, $address->province, $address->post_code, $address->country
-                            ]))),
-                        ];
-                    })->all(),
-                ];
-            })->all(),
+            'user' => UserResource::collection($user),
+            'success' => session('success'),
+            'error' => session('error'),
         ]);
     }
 
     public function update(Request $request)
     {
         $userId = Auth::id();
-        Log::info("[PROFILE UPDATE] Initiating update for user: {$userId}");
-
-        $rawContactsData = $request->input('contacts');
-        if ($rawContactsData === null) {
-            Log::warning('[PROFILE UPDATE] Raw "contacts" data is NULL in request input.', ['user_id' => $userId]);
-        } elseif (!is_array($rawContactsData)) {
-            Log::warning('[PROFILE UPDATE] Raw "contacts" data is NOT AN ARRAY.', ['user_id' => $userId, 'type' => gettype($rawContactsData)]);
-        }
-
-        DB::beginTransaction();
 
         try {
             $user = Auth::user();

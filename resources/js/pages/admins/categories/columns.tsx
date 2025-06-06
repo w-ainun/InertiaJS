@@ -33,8 +33,18 @@ export const columns: ColumnDef<Category, string>[] = [
   },
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader<Category, unknown> column={column} title="Desscription" />,
+    header: ({ column }) => <DataTableColumnHeader<Category, unknown> column={column} title="Description" />,
     cell: ({ row }) => <div className="text-muted-foreground">{row.getValue('description')}</div>,
+  },
+  {
+    accessorKey: 'created_at',
+    header: ({ column }) => <DataTableColumnHeader<Category, unknown> column={column} title="Added" />,
+    cell: ({ row }) => <div className="text-muted-foreground">{row.getValue('created_at')}</div>,
+  },
+  {
+    accessorKey: 'updated_at',
+    header: ({ column }) => <DataTableColumnHeader<Category, unknown> column={column} title="Updated" />,
+    cell: ({ row }) => <div className="text-muted-foreground">{row.getValue('updated_at')}</div>,
   },
   {
     id: 'actions',
@@ -45,7 +55,7 @@ export const columns: ColumnDef<Category, string>[] = [
         <div className="flex gap-5">
           <ShowButton endpoint="categorie" id={String(category.id)} />
           <EditButton endpoint="categorie" id={String(category.id)} />
-          <DeleteModal resourceName="categoiey" id={category.id} />
+          <DeleteModal resourceName="categorie" id={category.id} />
         </div>
       );
     },

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminTransactionDetailController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ProfileControllerClient;
 use App\Http\Controllers\ItemController;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +19,6 @@ use App\Models\Transaction;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-
     return redirect('/Homepage');
 });
 
@@ -59,6 +59,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('items', AdminItemController::class);
         Route::resource('ratings', AdminRatingController::class);
         Route::resource('details', AdminTransactionDetailController::class);
+    });
+
+    Route::prefix('client')->group(function () {
+        Route::prefix('profile')->group(function () {
+            Route::get('/', [ClientProfileController::class, 'index'])->name('client.profile.index');
+            Route::put('/{id}/user', [ClientProfileController::class, 'updateUser'])->name('client.profile.user');
+            Route::post('/{id}/contact', [ClientProfileController::class, 'storeContact'])->name('client.profile.contact');
+            Route::post('/{id}/address', [ClientProfileController::class, 'storeAddress'])->name('client.profile.address');
+        });
     });
 
     Route::prefix('courier')->name('courier.')->group(function () {
