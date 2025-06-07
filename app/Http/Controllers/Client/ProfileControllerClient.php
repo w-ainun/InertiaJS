@@ -3,342 +3,243 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\client\UserProfileResource;
 use App\Http\Resources\UserResource;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Address;
 use App\Models\Contact;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\ValidationException; 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
-class ProfileControllerClient extends Controller {
-    public function show() {
-        $auth = Auth::user();
-        $user = User::where('id', $auth->id)->with('contacts.addresses')->get();
+class ProfileControllerClient extends Controller
+{
+
+    /**
+     * Menampilkan halaman formulir profil pengguna.
+     * Metode ini memuat pengguna yang terotentikasi beserta relasi kontak dan alamatnya.
+     */
+    public function show()
+    {
+        // Memuat relasi 'contacts.addresses' pada user yang sedang login
+        $userWithRelations = Auth::user()->load(['contacts.addresses']);
 
         return Inertia::render('clients/ProfilePage', [
-            'user' => UserResource::collection($user),
-            'success' => session('success'),
-            'error' => session('error'),
+            'user' => new UserResource($userWithRelations),
+            'contacts' => $userWithRelations->contacts ?? [],
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+            ],
         ]);
     }
 
-    public function update(Request $request)
+    /**
+     * Memperbarui informasi akun pengguna (username, email, password).
+     */
+    public function updateAccount(Request $request)
     {
-        $userId = Auth::id();
-
         try {
             $user = Auth::user();
 
-            $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'username' => 'required|string|max:255|unique:users,username,' . $user->id,
-                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-                'password' => ['nullable', 'string', 'confirmed', Password::defaults()],
-                'contacts' => 'nullable|array',
-                'contacts.*.id' => 'nullable|integer|exists:contacts,id,user_id,' . $user->id,
-                'contacts.*.name' => 'required_with:contacts|string|max:100',
-                'contacts.*.phone' => 'required_with:contacts|string|max:20',
-                'contacts.*.gender' => 'required_with:contacts|in:MAN,WOMAN',
-                'contacts.*.birthday' => 'required_with:contacts|date',
-                'contacts.*.profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'contacts.*.profile_removed' => 'nullable|boolean',
-                'contacts.*.addresses' => 'nullable|array',
-                'contacts.*.addresses.*.id' => 'nullable|integer|exists:addresses,id',
-                'contacts.*.addresses.*.post_code' => 'required_with:contacts.*.addresses|string|max:10',
-                'contacts.*.addresses.*.country' => 'required_with:contacts.*.addresses|string|max:100',
-                'contacts.*.addresses.*.province' => 'required_with:contacts.*.addresses|string|max:100',
-                'contacts.*.addresses.*.city' => 'required_with:contacts.*.addresses|string|max:100',
-                'contacts.*.addresses.*.street' => 'required_with:contacts.*.addresses|string|max:200',
-                'contacts.*.addresses.*.more' => 'nullable|string|max:50',
+            $userValidated = $request->validate([
+                'username' => [
+                    'required', 'string', 'max:255',
+                    Rule::unique('users', 'username')->ignore($user->id),
+                ],
+                'email' => [
+                    'required', 'string', 'email', 'max:255',
+                    Rule::unique('users', 'email')->ignore($user->id),
+                ],
+                'password' => 'nullable|string|min:8|confirmed',
             ]);
 
-            if (isset($validatedData['contacts'])) {
-                if (empty($validatedData['contacts'])) {
-                    Log::warning('[PROFILE UPDATE] "contacts" data in validated input is AN EMPTY ARRAY.', ['user_id' => $userId]);
-                }
-            } else {
-                Log::warning('[PROFILE UPDATE] "contacts" key is NOT SET or NOT AN ARRAY in validated data.', ['user_id' => $userId]);
-            }
-
-            $userData = [
-                'name' => $validatedData['name'],
-                'username' => $validatedData['username'],
-                'email' => $validatedData['email'],
+            $updateData = [
+                'username' => $userValidated['username'],
+                'email' => $userValidated['email'],
             ];
-            if (!empty($validatedData['password'])) {
-                $userData['password'] = Hash::make($validatedData['password']);
+
+            if (!empty($userValidated['password'])) {
+                $updateData['password'] = Hash::make($userValidated['password']);
             }
 
-            if (!$user->update($userData)) {
-                Log::error('[PROFILE UPDATE] Failed to update user data.', ['user_id' => $user->id]);
-                DB::rollBack();
-                return redirect()->back()->withErrors(['error' => 'Gagal memperbarui data pengguna.'])->withInput();
-            }
-            Log::info('[PROFILE UPDATE] User data updated successfully.', ['user_id' => $user->id]);
+            $user->update($updateData);
 
-            $currentContactIdsInDb = $user->contacts()->pluck('id')->toArray();
-            $processedContactIds = [];
+            return redirect()->route('profile.show')->with('success', 'Informasi akun berhasil diperbarui.');
 
-            if (isset($validatedData['contacts']) && is_array($validatedData['contacts']) && !empty($validatedData['contacts'])) {
-                Log::info('[PROFILE UPDATE] Processing ' . count($validatedData['contacts']) . ' contact item(s).', ['user_id' => $userId]);
-                
-                foreach ($validatedData['contacts'] as $contactInput) {
-                    if (!is_array($contactInput)) {
-                        Log::warning("[PROFILE UPDATE] Skipping contact item because it's not an array after validation.", ['user_id' => $userId]);
-                        continue;
-                    }
-
-                    $contactData = array_map(fn($value) => is_string($value) ? trim($value) : $value, $contactInput);
-                    $contactInstance = null;
-                    $currentProfilePath = null;
-
-                    if (!empty($contactData['id'])) {
-                        $contactInstance = Contact::find($contactData['id']);
-                        if (!$contactInstance) {
-                            Log::warning('[PROFILE UPDATE] Contact ID submitted but not found, skipping update.', ['contact_id' => $contactData['id'], 'user_id' => $userId]);
-                            continue;
-                        }
-                        $currentProfilePath = $contactInstance->profile;
-                    }
-
-                    $newProfilePath = $currentProfilePath;
-                    if (isset($contactData['profile']) && $contactData['profile'] instanceof UploadedFile) {
-                        if ($currentProfilePath && Storage::disk('public')->exists($currentProfilePath)) {
-                            Storage::disk('public')->delete($currentProfilePath);
-                        }
-                        $newProfilePath = $contactData['profile']->store('profiles', 'public');
-                        Log::info('[PROFILE UPDATE] New profile uploaded for contact.', ['user_id' => $userId, 'contact_id_ref' => $contactInstance->id ?? 'new', 'path' => $newProfilePath]);
-                    } elseif (isset($contactData['profile_removed']) && $contactData['profile_removed'] === true) {
-                        if ($currentProfilePath && Storage::disk('public')->exists($currentProfilePath)) {
-                            Storage::disk('public')->delete($currentProfilePath);
-                        }
-                        $newProfilePath = null;
-                        Log::info('[PROFILE UPDATE] Profile removed for contact as requested.', ['user_id' => $userId, 'contact_id_ref' => $contactInstance->id ?? 'new']);
-                    }
-
-                    $contactFieldsForSave = [
-                        'name' => $contactData['name'] ?? null,
-                        'phone' => $contactData['phone'] ?? null,
-                        'gender' => $contactData['gender'] ?? null,
-                        'birthday' => $contactData['birthday'] ?? null,
-                        'profile' => $newProfilePath,
-                    ];
-                    
-                    if ($contactInstance) {
-                        if (empty(array_filter($contactFieldsForSave, fn($k) => $k !== 'profile', ARRAY_FILTER_USE_KEY)) && $contactFieldsForSave['profile'] === $currentProfilePath) {
-                            Log::info('[PROFILE UPDATE] No actual data changes for existing contact, skipping DB update.', ['contact_id' => $contactInstance->id, 'user_id' => $userId]);
-                        } else if (!$contactInstance->update($contactFieldsForSave)) {
-                            Log::error('[PROFILE UPDATE] Failed to update contact.', ['contact_id' => $contactInstance->id, 'user_id' => $userId]);
-                            continue; 
-                        } else {
-                            Log::info('[PROFILE UPDATE] Contact updated.', ['contact_id' => $contactInstance->id, 'user_id' => $userId]);
-                        }
-                    } else {
-                        if (empty($contactData['name']) || empty($contactData['phone']) || empty($contactData['gender']) || empty($contactData['birthday'])) {
-                            Log::warning('[PROFILE UPDATE] Skipping creation of new contact due to missing required fields after validation.', ['user_id' => $userId, 'provided_name' => $contactData['name'] ?? 'N/A']);
-                            continue;
-                        }
-                        $contactFieldsForSave['user_id'] = $user->id;
-                        $contactInstance = Contact::create($contactFieldsForSave);
-                        if (!$contactInstance) {
-                            Log::error('[PROFILE UPDATE] Failed to create contact.', ['user_id' => $userId, 'provided_name' => $contactData['name'] ?? 'N/A']);
-                            continue;
-                        }
-                        Log::info('[PROFILE UPDATE] Contact created.', ['contact_id' => $contactInstance->id, 'user_id' => $userId]);
-                    }
-                    $processedContactIds[] = $contactInstance->id;
-
-                    $currentAddressIdsInDbForContact = $contactInstance->addresses()->pluck('id')->toArray();
-                    $processedAddressIdsForContact = [];
-                    
-                    if (isset($contactData['addresses']) && is_array($contactData['addresses'])) {
-                        Log::info('[PROFILE UPDATE] Processing ' . count($contactData['addresses']) . ' addresses for contact.', ['contact_id' => $contactInstance->id, 'user_id' => $userId]);
-                        
-                        foreach ($contactData['addresses'] as $addressInput) {
-                            if (!is_array($addressInput)) {
-                                Log::warning("[PROFILE UPDATE] Skipping address item because it's not an array.", ['contact_id' => $contactInstance->id, 'user_id' => $userId]);
-                                continue;
-                            }
-                            $addressData = array_map(fn($value) => is_string($value) ? trim($value) : $value, $addressInput);
-                            
-                            $addressPayload = [
-                                'post_code' => $addressData['post_code'] ?? '',
-                                'country' => $addressData['country'] ?? '',
-                                'province' => $addressData['province'] ?? '',
-                                'city' => $addressData['city'] ?? '',
-                                'street' => $addressData['street'] ?? '',
-                                'more' => $addressData['more'] ?? null,
-                            ];
-
-                            if (empty($addressData['id']) && !array_filter(array_intersect_key($addressPayload, array_flip(['post_code', 'country', 'province', 'city', 'street'])))) {
-                                continue;
-                            }
-
-                            if (!empty($addressData['id'])) {
-                                $address = Address::where('id', $addressData['id'])
-                                    ->where('contact_id', $contactInstance->id)
-                                    ->first();
-                                
-                                if ($address) {
-                                    if (!$address->update($addressPayload)) {
-                                        Log::error('[PROFILE UPDATE] Failed to update address.', ['address_id' => $address->id, 'contact_id' => $contactInstance->id]);
-                                        continue;
-                                    }
-                                    Log::info('[PROFILE UPDATE] Address updated.', ['address_id' => $address->id]);
-                                    $processedAddressIdsForContact[] = $address->id;
-                                } else {
-                                    Log::warning('[PROFILE UPDATE] Address to update not found or not owned by contact.', ['submitted_address_id' => $addressData['id'], 'contact_id' => $contactInstance->id]);
-                                }
-                            } else {
-                                if (empty($addressPayload['post_code']) || empty($addressPayload['country']) || empty($addressPayload['province']) || empty($addressPayload['city']) || empty($addressPayload['street'])) {
-                                    Log::warning('[PROFILE UPDATE] Skipping creation of new address due to missing required fields.', ['contact_id' => $contactInstance->id]);
-                                    continue;
-                                }
-                                $addressPayload['contact_id'] = $contactInstance->id;
-                                $newAddress = Address::create($addressPayload);
-                                if (!$newAddress) {
-                                    Log::error('[PROFILE UPDATE] Failed to create address.', ['contact_id' => $contactInstance->id]);
-                                    continue;
-                                }
-                                Log::info('[PROFILE UPDATE] Address created.', ['address_id' => $newAddress->id]);
-                                $processedAddressIdsForContact[] = $newAddress->id;
-                            }
-                        }
-                    } else {
-                    }
-
-                    $addressIdsToDelete = array_diff($currentAddressIdsInDbForContact, $processedAddressIdsForContact);
-                    if (!empty($addressIdsToDelete)) {
-                        Address::whereIn('id', $addressIdsToDelete)
-                            ->where('contact_id', $contactInstance->id)
-                            ->delete();
-                        Log::info('[PROFILE UPDATE] Deleted addresses for contact.', ['contact_id' => $contactInstance->id, 'deleted_ids_count' => count($addressIdsToDelete)]);
-                    }
-                }
-            } else {
-                Log::info('[PROFILE UPDATE] No "contacts" array in validated data or it was empty.', ['user_id' => $userId]);
-                if (!array_key_exists('contacts', $validatedData) && !array_key_exists('contacts', $request->all())) {
-                    Log::warning('[PROFILE UPDATE] Key "contacts" was not present in request. Assuming no changes to existing contacts.', ['user_id' => $userId]);
-                    $processedContactIds = $currentContactIdsInDb;
-                } else {
-                    Log::info('[PROFILE UPDATE] "contacts" key was present but resulted in an empty list. Existing contacts will be deleted if not matched.', ['user_id' => $userId]);
-                }
-            }
-
-            $contactIdsToDelete = array_diff($currentContactIdsInDb, $processedContactIds);
-            if (!empty($contactIdsToDelete)) {
-                Log::info('[PROFILE UPDATE] Preparing to delete contacts for user.', ['user_id' => $user->id, 'contact_ids_to_delete_count' => count($contactIdsToDelete)]);
-                $contactsFoundForDeletion = Contact::whereIn('id', $contactIdsToDelete)
-                    ->where('user_id', $user->id)
-                    ->get();
-                
-                foreach ($contactsFoundForDeletion as $contactToDelete) {
-                    Log::info('[PROFILE UPDATE] Deleting contact and its resources.', ['contact_id' => $contactToDelete->id]);
-                    $contactToDelete->addresses()->delete();
-
-                    if ($contactToDelete->profile && Storage::disk('public')->exists($contactToDelete->profile)) {
-                        Storage::disk('public')->delete($contactToDelete->profile);
-                    }
-                    $contactToDelete->delete();
-                    Log::info('[PROFILE UPDATE] Contact deleted successfully.', ['contact_id' => $contactToDelete->id]);
-                }
-            }
-
-            DB::commit();
-            Log::info("[PROFILE UPDATE] Profile update transaction committed successfully for user: {$user->id}");
-            
-            return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui!');
-
-        } catch (ValidationException $e) {
-            DB::rollBack();
-            Log::error('[PROFILE UPDATE] Profile update VALIDATION FAILED.', ['user_id' => $userId, 'errors' => $e->errors()]);
-            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Mengirim error ke 'updateAccount' error bag
+            return back()->withErrors($e->errors(), 'updateAccount')->withInput();
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::critical('[PROFILE UPDATE] Profile update FAILED WITH GENERAL EXCEPTION.', [
-                'user_id' => $userId, 
-                'error_message' => $e->getMessage(), 
-                'file' => $e->getFile(), 
-                'line' => $e->getLine(),
-            ]);
-            return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan sistem. Mohon coba lagi nanti.'])->withInput();
+            Log::error('Kesalahan pembaruan akun: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memperbarui akun: ' . $e->getMessage());
         }
     }
 
-    public function storeAddressFromCart(Request $request)
+    /**
+     * Memperbarui informasi profil pengguna (kontak dan alamat).
+     */
+    public function updateProfile(Request $request)
     {
-        $user = Auth::user();
-        Log::info('[CART ADDRESS STORE] Initiated by user: ' . $user->id);
-
-        $defaultContactName = $user->username;
-        $defaultContactDataForCreate = [
-            'user_id' => $user->id,
-            'name' => $defaultContactName,
-            'phone' => $request->input('contact_phone', ''),
-            'gender' => $request->input('contact_gender', 'MAN'),
-            'birthday' => $request->input('contact_birthday', now()->format('Y-m-d'))
-        ];
-        
         try {
-            $contact = Contact::firstOrCreate(
-                ['name' => $defaultContactName, 'user_id' => $user->id], 
-                $defaultContactDataForCreate
-            );
+            $user = Auth::user();
 
-            Log::info('[CART ADDRESS STORE] Default contact prepared.', ['contact_id' => $contact->id, 'user_id' => $user->id]);
-
-            $validatedAddressData = $request->validate([
-                'post_code' => 'required|string|max:10',
-                'country' => 'required|string|max:100',
-                'province' => 'required|string|max:100',
-                'city' => 'required|string|max:100',
-                'street' => 'required|string|max:200',
-                'more' => 'nullable|string|max:50',
+            // Validasi untuk data kontak dan alamat yang bersifat nested
+            $contactsValidated = $request->validate([
+                'contacts' => 'present|array',
+                'contacts.*.id' => 'nullable|integer|exists:contacts,id',
+                'contacts.*.name' => 'required|string|max:255',
+                'contacts.*.phone' => 'required|string|max:20',
+                'contacts.*.gender' => 'required|in:MAN,WOMAN',
+                'contacts.*.birthday' => 'required|date',
+                'contacts.*.profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'contacts.*.profile_removed' => 'boolean',
+                'contacts.*.addresses' => 'present|array',
+                'contacts.*.addresses.*.id' => 'nullable|integer|exists:addresses,id',
+                'contacts.*.addresses.*.post_code' => 'required|string|max:10',
+                'contacts.*.addresses.*.country' => 'required|string|max:100',
+                'contacts.*.addresses.*.province' => 'required|string|max:100',
+                'contacts.*.addresses.*.city' => 'required|string|max:100',
+                'contacts.*.addresses.*.street' => 'required|string|max:255',
+                'contacts.*.addresses.*.more' => 'nullable|string|max:255',
             ]);
 
-            $validatedAddressData['contact_id'] = $contact->id;
-            
-            $address = Address::create($validatedAddressData);
+            DB::transaction(function () use ($user, $contactsValidated, $request) {
+                // Kelola pembaruan kontak dan alamat
+                $this->handleContactsUpdate($user, $contactsValidated['contacts'] ?? [], $request);
+            });
 
-            Log::info('[CART ADDRESS STORE] Address created from cart.', ['address_id' => $address->id, 'contact_id' => $contact->id]);
+            return redirect()->route('profile.show')->with('success', 'Kontak dan alamat berhasil diperbarui.');
 
-            return response()->json([
-                'message' => 'Alamat berhasil ditambahkan!',
-                'address' => [
-                    'id' => $address->id,
-                    'post_code' => $address->post_code,
-                    'country' => $address->country,
-                    'province' => $address->province,
-                    'city' => $address->city,
-                    'street' => $address->street,
-                    'more' => $address->more,
-                    'summary' => trim(implode(', ', array_filter([
-                        $address->street, $address->more, $address->city,
-                        $address->province, $address->post_code, $address->country
-                    ]))),
-                ]
-            ], 201);
-
-        } catch (ValidationException $e) {
-            Log::error('[CART ADDRESS STORE] Validation failed.', ['user_id' => $user->id, 'errors' => $e->errors()]);
-            return response()->json(['message' => 'Data tidak valid.', 'errors' => $e->errors()], 422);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Mengirim error ke 'updateProfile' error bag
+            return back()->withErrors($e->errors(), 'updateProfile')->withInput();
         } catch (\Exception $e) {
-            Log::critical('[CART ADDRESS STORE] Failed to store address from cart.', [
-                'user_id' => $user->id,
-                'error_message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return response()->json(['message' => 'Gagal menyimpan alamat karena kesalahan sistem.'], 500);
+            Log::error('Kesalahan pembaruan profil: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memperbarui profil: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Mengelola operasi buat, perbarui, dan hapus untuk kontak.
+     */
+    private function handleContactsUpdate(User $user, array $contactsData, Request $request)
+    {
+        $existingContactIds = $user->contacts->pluck('id')->toArray();
+        $submittedContactIds = [];
+
+        foreach ($contactsData as $index => $contactData) {
+            $contactId = $contactData['id'] ?? null;
+            $submittedContactIds[] = $contactId;
+
+            if ($contactId && in_array($contactId, $existingContactIds)) {
+                // Update kontak yang sudah ada
+                $contact = Contact::find($contactId);
+                if ($contact) {
+                    $this->updateExistingContact($contact, $contactData, $request, $index);
+                }
+            } else {
+                // Buat kontak baru
+                $this->createNewContact($user, $contactData, $request, $index);
+            }
+        }
+
+        // Hapus kontak yang tidak lagi ada di data yang disubmit
+        $contactsToDeleteIds = array_diff($existingContactIds, array_filter($submittedContactIds));
+        if (!empty($contactsToDeleteIds)) {
+            $contactsToDelete = Contact::whereIn('id', $contactsToDeleteIds)->get();
+            foreach ($contactsToDelete as $contact) {
+                if ($contact->profile && Storage::disk('public')->exists($contact->profile)) {
+                    Storage::disk('public')->delete($contact->profile);
+                }
+                $contact->addresses()->delete();
+                $contact->delete();
+            }
+        }
+    }
+
+    /**
+     * Memperbarui data kontak yang sudah ada.
+     */
+    private function updateExistingContact(Contact $contact, array $contactData, Request $request, int $index)
+    {
+        $profilePath = $contact->profile;
+
+        if (isset($contactData['profile_removed']) && $contactData['profile_removed']) {
+            if ($profilePath && Storage::disk('public')->exists($profilePath)) {
+                Storage::disk('public')->delete($profilePath);
+            }
+            $profilePath = null;
+        }
+
+        if ($request->hasFile("contacts.{$index}.profile")) {
+            if ($profilePath && Storage::disk('public')->exists($profilePath)) {
+                Storage::disk('public')->delete($profilePath);
+            }
+            $profilePath = $request->file("contacts.{$index}.profile")->store('contacts', 'public');
+        }
+
+        $contact->update([
+            'name' => $contactData['name'],
+            'phone' => $contactData['phone'],
+            'gender' => $contactData['gender'],
+            'birthday' => $contactData['birthday'],
+            'profile' => $profilePath,
+        ]);
+
+        $this->handleAddressesUpdate($contact, $contactData['addresses'] ?? []);
+    }
+
+    /**
+     * Membuat kontak baru.
+     */
+    private function createNewContact(User $user, array $contactData, Request $request, int $index)
+    {
+        $profilePath = null;
+        if ($request->hasFile("contacts.{$index}.profile")) {
+            $profilePath = $request->file("contacts.{$index}.profile")->store('contacts', 'public');
+        }
+
+        $contact = $user->contacts()->create([
+            'name' => $contactData['name'],
+            'phone' => $contactData['phone'],
+            'gender' => $contactData['gender'],
+            'birthday' => $contactData['birthday'],
+            'profile' => $profilePath,
+        ]);
+
+        if (isset($contactData['addresses'])) {
+            $this->handleAddressesUpdate($contact, $contactData['addresses']);
+        }
+        return $contact;
+    }
+
+    /**
+     * Mengelola operasi buat, perbarui, dan hapus untuk alamat.
+     */
+    private function handleAddressesUpdate(Contact $contact, array $addressesData)
+    {
+        $existingAddressIds = $contact->addresses->pluck('id')->toArray();
+        $submittedAddressIds = [];
+
+        foreach ($addressesData as $addressData) {
+            $addressId = $addressData['id'] ?? null;
+            $submittedAddressIds[] = $addressId;
+
+            if ($addressId && in_array($addressId, $existingAddressIds)) {
+                Address::find($addressId)->update($addressData);
+            } else {
+                $contact->addresses()->create($addressData);
+            }
+        }
+
+        $addressesToDelete = array_diff($existingAddressIds, array_filter($submittedAddressIds));
+        if (!empty($addressesToDelete)) {
+            Address::whereIn('id', $addressesToDelete)->delete();
         }
     }
 }

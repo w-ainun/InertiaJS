@@ -10,9 +10,10 @@ use App\Http\Controllers\Admin\AdminTransactionDetailController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Client\CartController;
-use App\Http\Controllers\Client\ClientProfileController;
+// use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ProfileControllerClient;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\Client\ClientOrderActionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Transaction;
@@ -63,10 +64,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('client')->group(function () {
         Route::prefix('profile')->group(function () {
-            Route::get('/', [ClientProfileController::class, 'index'])->name('client.profile.index');
-            Route::put('/{id}/user', [ClientProfileController::class, 'updateUser'])->name('client.profile.user');
-            Route::post('/{id}/contact', [ClientProfileController::class, 'storeContact'])->name('client.profile.contact');
-            Route::post('/{id}/address', [ClientProfileController::class, 'storeAddress'])->name('client.profile.address');
+            Route::get('/', [ProfileControllerClient::class, 'index'])->name('client.profile.index');
+            Route::put('/{id}/user', [ProfileControllerClient::class, 'updateUser'])->name('client.profile.user');
+            Route::post('/{id}/contact', [ProfileControllerClient::class, 'storeContact'])->name('client.profile.contact');
+            Route::post('/{id}/address', [ProfileControllerClient::class, 'storeAddress'])->name('client.profile.address');
         });
     });
 
@@ -76,9 +77,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('dashboard');
     });
 
-    Route::get('/profile', [ProfileControllerClient::class, 'show'])->name('profile.show');
-    Route::post('/profile', [ProfileControllerClient::class, 'update'])->name('profile.update');
-    Route::post('/profile/addresses', [ProfileControllerClient::class, 'storeAddressFromCart'])->name('profile.address.store');
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/profile', [ProfileControllerClient::class, 'show'])->name('profile.show');
+        
+        // Rute untuk memperbarui informasi akun (tanpa file)
+        Route::patch('/profile/account', [ProfileControllerClient::class, 'updateAccount'])->name('profile.account.update');
+        
+        // Rute untuk memperbarui profil (kontak & alamat, dengan file), menggunakan POST
+        Route::post('/profile/profile', [ProfileControllerClient::class, 'updateProfile'])->name('profile.profile.update');
+    });
 
     Route::get('/pesanan-saya', function () {
         $user = Auth::user();
@@ -152,6 +159,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'totalAmount' => $transaction->total, //
             ]);
         })->name('orders.show'); //
+
+        Route::get('/orders/{transaction}/receipt', [ClientOrderActionController::class, 'showReceipt'])->name('orders.receipt'); //
+        Route::post('/orders/{transaction}/mark-received', [ClientOrderActionController::class, 'markAsReceived'])->name('orders.markReceived'); //
     });
 });
 
