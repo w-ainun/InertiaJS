@@ -7,6 +7,7 @@ use App\Models\Item;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use App\Models\Address;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,34 +15,38 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Midtrans\Config as MidtransConfig;
 use Midtrans\Snap as MidtransSnap;
+use Carbon\Carbon;
 
-class CartController extends Controller {
-    public function __construct() {
+class CartController extends Controller
+{
+    public function __construct()
+    {
         MidtransConfig::$serverKey = config('midtrans.server_key');
         MidtransConfig::$isProduction = config('midtrans.is_production');
         MidtransConfig::$isSanitized = config('midtrans.is_sanitized');
         MidtransConfig::$is3ds = config('midtrans.is_3ds');
     }
 
-    public function index() {
+    public function index()
+    {
         $cartItemsSession = session('cart', []);
         $items = [];
         $subtotal = 0;
         $totalItemDiscount = 0;
-        $userAddresses = [];
+        $userContactsWithAddresses = [];
         $authUser = Auth::user();
-        $userDisplayContactPhone = null;
 
         if ($authUser) {
+            // Eager load contacts and their addresses
             $authUser->load('contacts.addresses');
-            if ($authUser->contacts->isNotEmpty()) {
-                $firstContact = $authUser->contacts->first();
-                if ($firstContact) {
-                    $userDisplayContactPhone = $firstContact->phone;
-                }
 
-                $userAddresses = $authUser->contacts->flatMap(function ($contact) {
-                    return $contact->addresses->map(function ($address) {
+            // Restructure data for the frontend
+            $userContactsWithAddresses = $authUser->contacts->map(function ($contact) {
+                return [
+                    'id' => $contact->id,
+                    'name' => $contact->name,
+                    'phone' => $contact->phone,
+                    'addresses' => $contact->addresses->map(function ($address) {
                         return [
                             'id' => $address->id,
                             'post_code' => $address->post_code,
@@ -59,16 +64,18 @@ class CartController extends Controller {
                                 $address->country
                             ]))),
                         ];
-                    });
-                })->values()->all();
-            }
+                    }),
+                ];
+            })->values()->all();
         }
 
         if (!empty($cartItemsSession)) {
             $dbItems = Item::whereIn('id', array_keys($cartItemsSession))->get()->keyBy('id');
             foreach ($cartItemsSession as $itemId => $cartEntry) {
                 $itemModel = $dbItems->get($itemId);
-                $quantity = is_array($cartEntry) && isset($cartEntry['quantity']) ? (int)$cartEntry['quantity'] : (int)$cartEntry;
+                $quantity = is_array($cartEntry) && isset($cartEntry['quantity'])
+                    ? (int)$cartEntry['quantity']
+                    : (int)$cartEntry;
 
 
                 if ($itemModel) {
@@ -101,16 +108,16 @@ class CartController extends Controller {
             'discount' => (float)$totalItemDiscount,
             'shipping' => (float)$shippingCostForDelivery,
             'total' => (float)$grandTotal,
-            'addresses' => $userAddresses,
+            'contactsWithAddresses' => $userContactsWithAddresses, // Send new structured data
             'user' => [
                 'name' => $authUser ? $authUser->name : 'Guest',
-                'contact_phone' => $userDisplayContactPhone,
                 'email' => $authUser ? $authUser->email : null,
             ],
         ]);
     }
 
-    public function getCartData() {
+    public function getCartData()
+    {
         $cartItemsSession = session('cart', []);
         $itemCount = 0;
         $totalValue = 0;
@@ -123,7 +130,9 @@ class CartController extends Controller {
 
             foreach ($cartItemsSession as $itemId => $cartEntry) {
                 $item = $dbItems->get($itemId);
-                $quantity = is_array($cartEntry) && isset($cartEntry['quantity']) ? (int)$cartEntry['quantity'] : (int)$cartEntry;
+                $quantity = is_array($cartEntry) && isset($cartEntry['quantity'])
+                    ? (int)$cartEntry['quantity']
+                    : (int)$cartEntry;
 
                 if ($item) {
                     $pricePerUnitAfterDiscount = $item->price * (1 - ($item->discount / 100));
@@ -138,7 +147,8 @@ class CartController extends Controller {
         ]);
     }
 
-    public function addToCart(Request $request) {
+    public function addToCart(Request $request)
+    {
         $request->validate([
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:1'
@@ -149,8 +159,8 @@ class CartController extends Controller {
         $quantity = (int)$request->quantity;
 
         if (isset($cart[$itemId])) {
-           $currentQuantity = is_array($cart[$itemId]) && isset($cart[$itemId]['quantity']) ? $cart[$itemId]['quantity'] : $cart[$itemId];
-           $cart[$itemId] = (int)$currentQuantity + $quantity;
+            $currentQuantity = (int)$cart[$itemId];
+            $cart[$itemId] = $currentQuantity + $quantity;
         } else {
             $cart[$itemId] = $quantity;
         }
@@ -159,7 +169,8 @@ class CartController extends Controller {
         return back()->with('success', 'Item added to cart successfully!');
     }
 
-    public function updateCart(Request $request) {
+    public function updateCart(Request $request)
+    {
         $request->validate([
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:0'
@@ -180,7 +191,8 @@ class CartController extends Controller {
         return back()->with('success', 'Cart updated successfully!');
     }
 
-    public function removeFromCart(Request $request) {
+    public function removeFromCart(Request $request)
+    {
         $request->validate(['item_id' => 'required|exists:items,id']);
         $cart = session('cart', []);
         unset($cart[$request->item_id]);
@@ -189,15 +201,21 @@ class CartController extends Controller {
         return back()->with('success', 'Item removed from cart successfully!');
     }
 
-    public function checkout(Request $request) {
-        $request->validate([
+    public function checkout(Request $request)
+    {
+        $validationRules = [
             'note' => 'nullable|string|max:1000',
             'delivery_option' => 'required|in:delivery,pickup',
-            'selected_address_id' => 'required_if:delivery_option,delivery|nullable|exists:addresses,id',
-        ], [
-            'selected_address_id.required_if' => 'Please select a delivery address when delivery option is chosen.',
-            'selected_address_id.exists' => 'The selected address is invalid.'
-        ]);
+            'selected_contact_id' => 'required_if:delivery_option,delivery|nullable|exists:contacts,id', // New validation
+            'selected_address_id' => 'required_if:delivery_option,delivery|nullable|exists:addresses,id', // New validation
+        ];
+        $validationMessages = [
+            'selected_contact_id.required_if' => 'Please select a recipient contact.',
+            'selected_address_id.required_if' => 'Please select a delivery address.',
+        ];
+
+        $request->validate($validationRules, $validationMessages);
+
 
         $cart_items_session = session('cart', []);
 
@@ -205,30 +223,31 @@ class CartController extends Controller {
             return back()->withErrors(['cart' => 'Your cart is empty!'])->withInput();
         }
 
-        $authUser = Auth::user()->loadMissing('contacts');
+        $authUser = Auth::user();
         $selectedAddress = null;
         $customerContactPhoneForMidtrans = null;
         $shippingContactPhoneForMidtrans = null;
         $shippingContactNameForMidtrans = $authUser->name;
 
         if ($request->delivery_option === 'delivery') {
-            if (!$request->selected_address_id) {
-               return back()->withErrors(['selected_address_id' => 'Please select a delivery address.'])->withInput();
-            }
-            $selectedAddress = Address::with('contact')->find($request->selected_address_id);
+            $selectedContact = Contact::find($request->selected_contact_id);
+            $selectedAddress = Address::find($request->selected_address_id);
 
-            if (!$selectedAddress || !$selectedAddress->contact || $selectedAddress->contact->user_id !== $authUser->id) {
-                return back()->withErrors(['selected_address_id' => 'The selected address does not belong to you or is invalid.'])->withInput();
+            // Critical validation: ensure the address belongs to the contact, and the contact belongs to the user
+            if (!$selectedContact || $selectedContact->user_id !== $authUser->id) {
+                return back()->withErrors(['selected_contact_id' => 'The selected contact is invalid.'])->withInput();
             }
-            $customerContactPhoneForMidtrans = $selectedAddress->contact->phone;
-            $shippingContactPhoneForMidtrans = $selectedAddress->contact->phone;
-            $shippingContactNameForMidtrans = $selectedAddress->contact->name;
-        } else {
-            if ($authUser->contacts->isNotEmpty()) {
-                $firstContact = $authUser->contacts->first();
-                if ($firstContact) {
-                    $customerContactPhoneForMidtrans = $firstContact->phone;
-                }
+            if (!$selectedAddress || $selectedAddress->contact_id !== $selectedContact->id) {
+                return back()->withErrors(['selected_address_id' => 'The selected address does not match the recipient contact.'])->withInput();
+            }
+            
+            $customerContactPhoneForMidtrans = $selectedContact->phone;
+            $shippingContactPhoneForMidtrans = $selectedContact->phone;
+            $shippingContactNameForMidtrans = $selectedContact->name;
+        } else { // Pickup
+            $authUser->loadMissing('contacts');
+            if ($authUser->contacts->isNotEmpty() && $authUser->contacts->first()->phone) {
+                $customerContactPhoneForMidtrans = $authUser->contacts->first()->phone;
             }
         }
 
@@ -243,24 +262,32 @@ class CartController extends Controller {
             $finalNote = $request->note ?? '';
 
             $shippingCost = 0;
+            $pickupDeadline = null;
+
             if ($request->delivery_option === 'delivery' && $selectedAddress) {
                 $shippingCost = (float) config('shop.delivery_fee', 0);
                 $addressSummary = trim(implode(', ', array_filter([
                     $selectedAddress->street, $selectedAddress->more, $selectedAddress->city,
                     $selectedAddress->province, $selectedAddress->post_code, $selectedAddress->country
                 ])));
-                $finalNote = "Delivery to: " . $addressSummary . "\n---\n" . $finalNote;
+                $finalNote = "Recipient: {$shippingContactNameForMidtrans}\n" . 
+                             "Delivery to: " . $addressSummary . "\n---\n" . $finalNote;
             } elseif ($request->delivery_option === 'pickup') {
                 $finalNote = "Pickup from store.\n---\n" . $finalNote;
                 $shippingCost = 0;
+                $pickup_window_hours = config('shop.pickup_window_hours', 48);
+                $pickupDeadline = Carbon::now()->addHours($pickup_window_hours);
             }
 
             $itemIds = array_keys($cart_items_session);
             $dbItems = Item::whereIn('id', $itemIds)->get()->keyBy('id');
 
-            foreach ($cart_items_session as $itemId => $cartQuantity) {
+            foreach ($cart_items_session as $itemId => $cartQuantityOrDetails) {
                 $item = $dbItems->get($itemId);
-                $quantity = (int)$cartQuantity;
+                $quantity = is_array($cartQuantityOrDetails) && isset($cartQuantityOrDetails['quantity'])
+                    ? (int)$cartQuantityOrDetails['quantity']
+                    : (int)$cartQuantityOrDetails;
+
 
                 if (!$item) throw new \Exception("Item with ID {$itemId} not found in database.");
                 if ($item->stock < $quantity) throw new \Exception("Insufficient stock for item: {$item->name}");
@@ -273,7 +300,8 @@ class CartController extends Controller {
                 $calculatedTotalItemDiscount += ($itemSubtotalOriginal - $itemSubtotalDiscounted);
 
                 $transactionDetailsData[] = [
-                    'item_model' => $item, 'quantity' => $quantity,
+                    'item_model' => $item,
+                    'quantity' => $quantity,
                     'price_at_time' => $item->price,
                     'discount_percentage_at_time' => $item->discount,
                 ];
@@ -298,10 +326,13 @@ class CartController extends Controller {
             }
 
             $grandTotalForMidtrans = 0;
-            foreach($midtransItemDetails as $mi) {
+            foreach ($midtransItemDetails as $mi) {
                 $grandTotalForMidtrans += $mi['price'] * $mi['quantity'];
             }
-            if ($grandTotalForMidtrans <= 0 && !empty($midtransItemDetails)) $grandTotalForMidtrans = 1;
+
+            if ($grandTotalForMidtrans <= 0 && !empty($midtransItemDetails)) {
+                // Handle free orders
+            }
 
 
             $transaction = Transaction::create([
@@ -313,44 +344,53 @@ class CartController extends Controller {
                 'delivery_option' => $request->delivery_option,
                 'shipping_cost' => $shippingCost,
                 'address_id' => ($request->delivery_option === 'delivery' && $selectedAddress) ? $selectedAddress->id : null,
+                'pickup_deadline' => $pickupDeadline,
             ]);
 
             foreach ($transactionDetailsData as $detail) {
                 TransactionDetail::create([
-                    'transaction_id' => $transaction->id, 'item_id' => $detail['item_model']->id,
-                    'quantity' => $detail['quantity'], 'price_at_time' => $detail['price_at_time'],
+                    'transaction_id' => $transaction->id,
+                    'item_id' => $detail['item_model']->id,
+                    'quantity' => $detail['quantity'],
+                    'price_at_time' => $detail['price_at_time'],
                     'discount_percentage_at_time' => $detail['discount_percentage_at_time'],
                 ]);
                 $detail['item_model']->decrement('stock', $detail['quantity']);
             }
 
-            $midtransOrderId = $transaction->id . '-' . time();
+            $midtransOrderId = 'RB-' . $transaction->id . '-' . time();
+
             $customer_details = [
-                'first_name' => $authUser->name,
+                'first_name' => $shippingContactNameForMidtrans, // Use selected contact name
                 'email' => $authUser->email,
                 'phone' => $customerContactPhoneForMidtrans,
             ];
-            if ($request->delivery_option === 'delivery' && $selectedAddress && $selectedAddress->contact) {
-               $customer_details['shipping_address'] = [
+
+            if ($request->delivery_option === 'delivery' && $selectedAddress) {
+                $customer_details['shipping_address'] = [
                     'first_name'   => $shippingContactNameForMidtrans,
                     'phone'        => $shippingContactPhoneForMidtrans,
-                    'address'      => $selectedAddress->street . ($selectedAddress->more ? ', '.$selectedAddress->more : ''),
+                    'address'      => $selectedAddress->street . ($selectedAddress->more ? ', ' . $selectedAddress->more : ''),
                     'city'         => $selectedAddress->city,
                     'postal_code'  => $selectedAddress->post_code,
                     'country_code' => 'IDN',
-               ];
+                ];
             }
 
             $midtrans_params = [
                 'transaction_details' => ['order_id' => $midtransOrderId, 'gross_amount' => round($grandTotalForMidtrans)],
                 'item_details'        => $midtransItemDetails,
                 'customer_details'    => $customer_details,
-                'callbacks' => ['finish' => route('client.orders.show', ['transaction' => $transaction->id, '_from_midtrans' => '1'])]
+                'callbacks' => [
+                    'finish' => route('client.orders.show', ['transaction' => $transaction->id, '_from_midtrans' => '1', 'order_id' => $midtransOrderId])
+                ]
             ];
 
             $snapToken = null;
             if ($grandTotalForMidtrans > 0) {
                 $snapToken = MidtransSnap::getSnapToken($midtrans_params);
+                $transaction->payment_method = 'midtrans';
+                $transaction->save();
             } else {
                 $transaction->status = 'paid';
                 $transaction->payment_method = 'free_order';
@@ -365,12 +405,11 @@ class CartController extends Controller {
             session()->forget('cart');
             DB::commit();
 
-            Log::info("Checkout for order {$transaction->id} successful. Midtrans Snap Token generated. Order ID for Midtrans: {$midtransOrderId}");
+            Log::info("Checkout for order {$transaction->id} successful. Midtrans Snap Token generated. Order ID for Midtrans: {$midtransOrderId}", ['params_to_midtrans' => $midtrans_params]);
 
             return redirect()->route('client.payment.initiate', ['transaction' => $transaction->id])
                 ->with('snap_token', $snapToken)
                 ->with('success_payment_initiation', 'Order placed! Redirecting to payment...');
-
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Checkout error: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString(), ['request' => $request->all(), 'params_sent_to_midtrans' => $midtrans_params]);
