@@ -19,7 +19,7 @@ class Transaction extends Model
         'note',
         'payment_method',
         'status',
-        'delivery_option', // Added based on CartController.php
+        'delivery_status', // Added based on CartController.php
         'shipping_cost',   // Added based on CartController.php
     ];
 

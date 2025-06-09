@@ -159,20 +159,25 @@ export default function Cart(props: CartPageProps) {
         }));
     };
 
-    const handleCheckout = () => {
-        if (data.delivery_option === 'delivery' && !data.selected_contact_id) {
-            setPageMessage({ type: 'error', text: 'Please select a recipient contact.' });
-            return;
-        }
-        if (data.delivery_option === 'delivery' && !data.selected_address_id) {
-            setPageMessage({ type: 'error', text: 'Please select a delivery address.' });
-            return;
-        }
-        post(route('client.cart.checkout'), {
-            onSuccess: () => window.dispatchEvent(new Event('cart-updated')),
-        });
+   const handleCheckout = () => {
+    // Data yang akan dikirim diambil dari state 'data' milik useForm
+    const checkoutData = {
+        note: data.note,
+        delivery_option: data.delivery_option,
+        selected_contact_id: data.selected_contact_id,
+        selected_address_id: data.selected_address_id,
     };
 
+    console.log("Mencoba mengirim data dengan router.post:", checkoutData);
+
+    // Menggunakan router.post secara langsung, bukan 'post' dari useForm
+    router.post(route('client.cart.checkout'), checkoutData, {
+        onSuccess: () => window.dispatchEvent(new Event('cart-updated')),
+        onError: (errors) => {
+            console.error("Terjadi error dari server:", errors);
+        }
+    });
+};
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0

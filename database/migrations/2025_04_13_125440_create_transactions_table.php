@@ -27,7 +27,12 @@ return new class extends Migration {
                 'canceled',
                 'failed'
             ])->default('pending');
-
+            $table->enum('delivery_status', [
+                'menunggu',
+                'diambil', 
+                'sedang dikirim', 
+                'selesai'
+            ])->default('menunggu');
             $table->timestamps();
         });
     }

@@ -13,34 +13,30 @@ class ClientOrderActionController extends Controller
 {
     public function markAsReceived(Request $request, Transaction $transaction)
     {
-        // Authorization: Ensure the authenticated user owns this transaction
         if (Auth::id() !== $transaction->client_id) {
             return redirect()->route('Homepage')->with('error', 'Unauthorized action.');
         }
 
-        // Check if order status allows this action
-        $allowedStatuses = ['dalam_pengiriman'];
-        if ($transaction->delivery_option === 'pickup') {
-            // For pickup, perhaps it can be marked received once 'dikemas' (packed/ready for pickup)
-            $allowedStatuses[] = 'dikemas';
+        $allowedDeliveryStatuses = ['sedang dikirim', 'selesai'];
+        
+        if ($transaction->delivery_option === 'pickup' && $transaction->delivery_status === 'diambil') {
+            $allowedDeliveryStatuses[] = 'diambil';
         }
 
-        if (!in_array($transaction->status, $allowedStatuses)) {
-            return back()->with('error', 'Order cannot be marked as received at its current status.');
+        if (!in_array($transaction->delivery_status, $allowedDeliveryStatuses)) {
+            return back()->with('error', 'Pesanan belum dapat ditandai sebagai diterima pada status pengiriman saat ini.');
         }
 
-        $transaction->status = 'diterima'; // Order received by customer
+        $transaction->status = 'selesai'; 
+        $transaction->delivery_status = 'selesai';
         $transaction->user_marked_received_at = Carbon::now();
         $transaction->save();
 
-        // Optionally, trigger an event or notification here
-
-        return redirect()->route('pesanan-saya')->with('success', 'Order successfully marked as received!');
+        return redirect()->route('pesanan-saya')->with('success', 'Pesanan berhasil ditandai sebagai selesai!');
     }
 
     public function showReceipt(Request $request, Transaction $transaction)
     {
-        // Authorization
         if (Auth::id() !== $transaction->client_id) {
             return redirect()->route('Homepage')->with('error', 'Unauthorized action.');
         }
@@ -48,10 +44,9 @@ class ClientOrderActionController extends Controller
         $transaction->load([
             'details.item:id,name,unit',
             'address:id,street,more,city,province,post_code,country',
-            'user:id,username,email' // Load basic user info, changed 'name' to 'username'
+            'user:id,username,email'
         ]);
 
-        // Store contact details (could come from config or a settings table)
         $storeContact = [
             'name' => config('app.name', 'Your Store Name'),
             'address' => config('shop.store_address', '123 Store Street, Your City'),
@@ -59,18 +54,15 @@ class ClientOrderActionController extends Controller
             'email' => config('shop.store_email', 'support@yourstore.com'),
         ];
 
-        // Generate order number display if not already present (consistent with PesananSaya.tsx)
-        // Though it's better if order_number_display is a persisted attribute or an accessor in the model
         $order_number_display = 'RB-' . $transaction->id . '-' . $transaction->created_at->timestamp;
-
 
         return Inertia::render('Client/OrderReceipt', [
             'transaction' => $transaction,
-            'transaction_details_items' => $transaction->details, // Send details separately if needed for structure
+            'transaction_details_items' => $transaction->details,
             'order_number_display' => $order_number_display,
             'storeContact' => $storeContact,
-            'client' => $transaction->user, // Pass the client/user data
-            'deliveryAddress' => $transaction->address, // Pass the delivery address
+            'client' => $transaction->user,
+            'deliveryAddress' => $transaction->address,
         ]);
     }
 }

@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\AdminTransactionDetailController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Client\CartController;
-// use App\Http\Controllers\Client\ClientProfileController;
+use App\Http\Controllers\Courier\CourierController;
 use App\Http\Controllers\Client\ProfileControllerClient;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\Client\ClientOrderActionController;
@@ -95,9 +95,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'historicalOrders' => [],
             ]);
         }
-
-        $activeStatuses = ['pending', 'paid', 'settlement', 'dikemas', 'dalam_pengiriman'];
-        $historicalStatuses = ['selesai', 'diterima', 'canceled', 'failed', 'expired', 'deny'];
+        
+        // Pesanan dianggap aktif jika statusnya belum 'selesai' atau status final negatif lainnya.
+        // 'diterima' dan 'dalam_pengiriman' termasuk status aktif.
+        $activeStatuses = ['pending', 'paid', 'settlement', 'dikemas', 'dalam_pengiriman', 'diterima'];
+        $historicalStatuses = ['selesai', 'canceled', 'failed', 'expired', 'deny'];
 
         $ordersQuery = Transaction::where('client_id', $user->id)
                             ->with([
@@ -126,7 +128,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'activeOrders' => $activeOrders,
             'historicalOrders' => $historicalOrders,
         ]);
-    })->name('pesanan-saya'); // Nama route tetap sama, middleware sudah dicakup oleh group
+    })->name('pesanan-saya');
+
 
     Route::group(['as' => 'client.', 'prefix' => 'client'], function () {
         Route::get('/cart', [CartController::class, 'index'])->name('cart.index'); //
@@ -163,8 +166,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/orders/{transaction}/receipt', [ClientOrderActionController::class, 'showReceipt'])->name('orders.receipt'); //
         Route::post('/orders/{transaction}/mark-received', [ClientOrderActionController::class, 'markAsReceived'])->name('orders.markReceived'); //
     });
-});
 
+    Route::prefix('courier')->group(function () {
+        Route::get('/', [CourierController::class, 'index'])->name('courier.beranda');
+        Route::patch('/update/{id}', [CourierController::class, 'update'])->name('courier.update');
+});
+});
 if (file_exists(__DIR__ . '/settings.php')) {
     require __DIR__ . '/settings.php';
 }
