@@ -1,5 +1,12 @@
 import { useState } from 'react';
 
+// Add WhatsApp helper function
+const openWhatsApp = (question: string) => {
+  const phoneNumber = '6287889817650'
+  const message = encodeURIComponent(`Halo, saya ingin bertanya tentang: ${question}`);
+  window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+};
+
 interface FaqQuestion {
   id: number;
   title: string;
@@ -36,7 +43,8 @@ export default function FaqLayout({ className = "" }: FaqProps) {
 
   const tabs = [
     { id: 'faq', label: 'Pertanyaan Populer' },
-    { id: 'about', label: 'Tentang Kami' },
+    // Commented out About Us tab
+    // { id: 'about', label: 'Tentang Kami' },
     { id: 'help', label: 'Pusat Bantuan' }
   ];
 
@@ -64,6 +72,8 @@ export default function FaqLayout({ className = "" }: FaqProps) {
         }
       }
     ],
+    // Commented out About section
+    /*
     about: [
       {
         id: 1,
@@ -78,6 +88,7 @@ export default function FaqLayout({ className = "" }: FaqProps) {
         textColor: 'text-white'
       }
     ],
+    */
     help: [
       {
         id: 1,
@@ -124,9 +135,18 @@ export default function FaqLayout({ className = "" }: FaqProps) {
               <div className={`${item.bgColor} rounded-2xl p-6 mb-4 h-full`}>
                 <h3 className={`${item.textColor} font-bold mb-4`}>{item.title}</h3>
                 {item.questions.map((question, index) => (
-                  <p key={index} className={`${item.textColor} text-sm ${index > 0 ? 'mt-3' : ''}`}>
-                    {question}
-                  </p>
+                  <button
+                    key={index}
+                    onClick={() => openWhatsApp(question)}
+                    className={`
+                      ${item.textColor} text-sm ${index > 0 ? 'mt-3' : ''}
+                      w-full text-left hover:opacity-80 transition-opacity
+                      flex items-center gap-2
+                    `}
+                  >
+                    <span>{question}</span>
+                    <span className="text-xs">→</span>
+                  </button>
                 ))}
               </div>
             ) : (

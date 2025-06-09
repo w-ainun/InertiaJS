@@ -14,16 +14,19 @@ use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ProfileControllerClient;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\Client\ClientOrderActionController;
+use App\Http\Controllers\FavoriteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Transaction;
 use Inertia\Inertia;
+use App\Http\Controllers\HomeController;
 
 Route::get('/', function () {
     return redirect('/Homepage');
 });
 
-Route::get('/', [ItemController::class, 'index'])->name('homepage');
+// Route::get('/', [ItemController::class, 'index'])->name('homepage');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/offers', function () {
     return Inertia::render('offers');
@@ -53,8 +56,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', AdminUserController::class);
         Route::resource('contacts', AdminContactController::class);
         Route::patch('/contacts/{id}/restore', [AdminContactController::class, 'restore'])->name('contacts.restore');
-        Route::resource('address', AdminAddressController::class);
-        Route::patch('/addresss/{id}/restore', [AdminAddressController::class, 'restore'])->name('address.restore');
         Route::resource('transactions', AdminTransactionController::class);
         Route::resource('categories', AdminCategoryController::class);
         Route::resource('items', AdminItemController::class);
@@ -128,7 +129,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('pesanan-saya'); // Nama route tetap sama, middleware sudah dicakup oleh group
 
-    Route::group(['as' => 'client.', 'prefix' => 'client'], function () {
+    Route::middleware(['auth'])->prefix('client')->name('client.')->group(function () {
         Route::get('/cart', [CartController::class, 'index'])->name('cart.index'); //
         Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add'); //
         Route::patch('/cart/update', [CartController::class, 'updateCart'])->name('cart.update'); //
@@ -162,6 +163,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/orders/{transaction}/receipt', [ClientOrderActionController::class, 'showReceipt'])->name('orders.receipt'); //
         Route::post('/orders/{transaction}/mark-received', [ClientOrderActionController::class, 'markAsReceived'])->name('orders.markReceived'); //
+
+        // Favorite routes
+        Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])
+            ->name('favorites.toggle');
     });
 });
 

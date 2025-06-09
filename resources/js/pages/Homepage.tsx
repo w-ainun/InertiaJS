@@ -98,7 +98,7 @@ const Menu = () => {
       )}
       
       {/* RB Store paling populer section */}
-      <div className="mx-16 mt-16 text-black">
+      {/* <div className="mx-16 mt-16 text-black">
         <h2 className="text-2xl font-bold mb-8">RB Store paling populer! 😋</h2>
         
         <div className="grid grid-cols-6 gap-6">
@@ -132,7 +132,7 @@ const Menu = () => {
             <p className="text-sm font-medium text-center">Puding</p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Kenali Kelezatan section */}
       {/* Commented out original section
