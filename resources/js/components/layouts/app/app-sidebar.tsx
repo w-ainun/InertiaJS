@@ -10,85 +10,102 @@ import {
   Contact,
   Folder,
   LayoutGrid,
-  // MessageSquareText,
-  // Server,
+  PackageCheck,
+  Truck,
   Users,
 } from 'lucide-react';
 
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
 import NavFooter from '../navigation/nav-footer';
 import NavMain from '../navigation/nav-main';
 import NavUser from '../navigation/nav-user';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/admin',
-    icon: LayoutGrid,
-  },
-  {
-    title: 'Brainware',
-    icon: CircleUser,
-    items: [
-      {
-        title: 'Users',
-        href: route('users.index'),
-        icon: Users,
-      },
-      {
-        title: 'Contacts',
-        href: route('contacts.index'),
-        icon: Contact,
-      },
-      {
-        title: 'Address',
-        href: route('address.index'),
-        icon: BookUser,
-      },
-    ],
-  },
-  {
-    title: 'Categories',
-    href: route('categories.index'),
-    icon: ChartBarStacked,
-  },
-  {
-    title: 'Products',
-    href: route('items.index'),
-    icon: Box,
-  },
-  {
-    title: 'Transactions',
-    href: route('transactions.index'),
-    icon: BadgeDollarSign,
-  },
-  // {
-  //   title: 'Feedback',
-  //   href: '/feedbacks',
-  //   icon: MessageSquareText,
-  // },
-  // {
-  //   title: 'Server',
-  //   href: '/server',
-  //   icon: Server,
-  // },
-];
+export default function AppSidebar({ role = 'admin' }: { role?: 'admin' | 'courier' }) {
+  const mainNavItems: NavItem[] =
+    role === 'courier'
+      ? [
+          {
+            title: 'Dashboard',
+            href: '/courier',
+            icon: LayoutGrid,
+          },
+          {
+            title: 'Orderan Diambil',
+            href: '/courier#diambil',
+            icon: Truck,
+          },
+          {
+            title: 'Pengiriman Selesai',
+            href: '/courier#selesai',
+            icon: PackageCheck,
+          },
+        ]
+      : [
+          {
+            title: 'Dashboard',
+            href: '/admin',
+            icon: LayoutGrid,
+          },
+          {
+            title: 'Brainware',
+            icon: CircleUser,
+            items: [
+              {
+                title: 'Users',
+                href: route('users.index'),
+                icon: Users,
+              },
+              {
+                title: 'Contacts',
+                href: route('contacts.index'),
+                icon: Contact,
+              },
+              {
+                title: 'Address',
+                href: route('address.index'),
+                icon: BookUser,
+              },
+            ],
+          },
+          {
+            title: 'Categories',
+            href: route('categories.index'),
+            icon: ChartBarStacked,
+          },
+          {
+            title: 'Products',
+            href: route('items.index'),
+            icon: Box,
+          },
+          {
+            title: 'Transactions',
+            href: route('transactions.index'),
+            icon: BadgeDollarSign,
+          },
+        ];
 
-const footerNavItems: NavItem[] = [
-  {
-    title: 'Repository',
-    href: 'https://github.com/rhindottire/InertiaJS/tree/development',
-    icon: Folder,
-  },
-  {
-    title: 'Documentation',
-    href: 'https://laravel.com/docs/starter-kits',
-    icon: BookOpen,
-  },
-];
+  const footerNavItems: NavItem[] = [
+    {
+      title: 'Repository',
+      href: 'https://github.com/rhindottire/InertiaJS/tree/development',
+      icon: Folder,
+    },
+    {
+      title: 'Documentation',
+      href: 'https://laravel.com/docs/starter-kits',
+      icon: BookOpen,
+    },
+  ];
 
-export default function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>

@@ -177,10 +177,10 @@ export default function PaymentInitiatePage(props: PaymentInitiatePageSpecificPr
                         </Link>
                          <span className="mx-2 text-gray-400">|</span>
                         <Link 
-                            href={route('Homepage')} 
+                            href={route('pesanan-saya')} 
                             className="text-sm text-green-600 hover:text-green-700 underline"
                         >
-                            Kembali ke Beranda
+                            ke pesanan saya
                         </Link>
                     </div>
                 </div>
