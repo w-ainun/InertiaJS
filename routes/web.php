@@ -57,7 +57,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('dashboard');
         Route::resource('users', AdminUserController::class);
         Route::resource('contacts', AdminContactController::class);
-        Route::patch('/contacts/{id}/restore', [AdminContactController::class, 'restore'])->name('contacts.restore');
+        Route::resource('address', AdminAddressController::class);
+        // Route::resource('feedbacks', AdminFeedbackController::class);
         Route::resource('transactions', AdminTransactionController::class);
         Route::resource('categories', AdminCategoryController::class);
         Route::resource('items', AdminItemController::class);
