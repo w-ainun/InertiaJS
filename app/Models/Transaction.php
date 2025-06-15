@@ -58,4 +58,9 @@ class Transaction extends Model
         // and your addresses table is named 'addresses' (the model is 'Address')
         return $this->belongsTo(Address::class, 'address_id', 'id');
     }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class, 'voucher_id', 'id'); // Pastikan 'voucher_id' adalah foreign key yang benar
+    }
 }

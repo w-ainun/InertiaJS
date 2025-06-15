@@ -1,142 +1,187 @@
+// PaymentInitiatePage.tsx
 import React, { useEffect, useState } from 'react';
 import { Head, usePage, router, Link } from '@inertiajs/react';
 import AppTemplate from '@/components/templates/app-template';
 import { Loader2, AlertTriangle } from 'lucide-react';
-import { PageProps as InertiaPageProps } from '@inertiajs/core'; // Import base Inertia PageProps
 
-// Helper untuk memuat skrip Midtrans Snap (keep as is)
+// --- Helper untuk logging yang lebih konsisten ---
+const logDebug = (message: string, data: any = '') => {
+    console.log(`[PaymentInitiatePage DEBUG] ${message}`, data);
+};
+
 const loadMidtransSnapScript = (clientKey: string, onLoaded: () => void, onError: () => void) => {
     const scriptId = 'midtrans-snap-script';
+    logDebug('Memulai proses loadMidtransSnapScript.');
+
     if (document.getElementById(scriptId) && window.snap) {
-        onLoaded(); return;
+        logDebug('Script Midtrans sudah ada dan window.snap tersedia. Memanggil onLoaded.');
+        onLoaded();
+        return;
     }
+
     if (document.getElementById(scriptId) && !window.snap) {
+        logDebug('Script tag sudah ada tapi window.snap belum siap. Menambahkan event listener.');
         const existingScript = document.getElementById(scriptId);
         const handleLoad = () => window.snap ? onLoaded() : onError();
         existingScript?.addEventListener('load', handleLoad);
         existingScript?.addEventListener('error', onError);
-        if (window.snap) onLoaded();
+        if (window.snap) onLoaded(); // Cek ulang jika sudah termuat saat ini
         return;
     }
+
+    logDebug('Membuat elemen script Midtrans baru.');
     const script = document.createElement('script');
     script.src = import.meta.env.VITE_MIDTRANS_SNAP_URL || "https://app.sandbox.midtrans.com/snap/snap.js";
     script.id = scriptId;
     script.setAttribute('data-client-key', clientKey);
     document.body.appendChild(script);
-    script.onload = () => window.snap ? onLoaded() : onError();
-    script.onerror = onError;
+
+    script.onload = () => {
+        if (window.snap) {
+            logDebug('Script berhasil dimuat (onload) dan window.snap ditemukan.');
+            onLoaded();
+        } else {
+            logDebug('Script berhasil dimuat (onload) TAPI window.snap TIDAK ditemukan.');
+            onError();
+        }
+    };
+
+    script.onerror = () => {
+        logDebug('Gagal memuat script Midtrans (onerror).');
+        onError();
+    };
 };
 
 declare global { interface Window { snap: any; } }
 declare function route(name: string, params?: any): string;
 
-// Props specific to this page, passed from the controller
 interface PaymentInitiatePageSpecificProps {
     transactionId: number | string;
     totalAmount: number | string;
     orderStatus: string;
 }
 
-// Shared props that Inertia will provide, including flash, client_key, and base InertiaPageProps
-interface SharedPropsForPaymentPage extends InertiaPageProps { // Extends InertiaPageProps
+interface SharedPropsForPaymentPage extends InertiaPageProps {
     flash: {
         success_payment_initiation?: string;
         snap_token?: string | null;
         error?: string;
     };
     midtrans_client_key: string;
-    // errors: Errors & ErrorBag; // If you share errors globally and need them here
-    // auth: any; // Example for other shared props
 }
 
-// The final props type for this page component
 type PaymentInitiatePageCombinedProps = PaymentInitiatePageSpecificProps & SharedPropsForPaymentPage;
 
-
-export default function PaymentInitiatePage(props: PaymentInitiatePageSpecificProps) { // Component receives specific props
+export default function PaymentInitiatePage(props: PaymentInitiatePageSpecificProps) {
+    logDebug('Component RENDER/RE-RENDER.');
     const { transactionId, totalAmount, orderStatus } = props;
-    // Use the combined type for usePage
     const { props: pageSharedProps } = usePage<PaymentInitiatePageCombinedProps>();
-
-    // Access shared props from pageSharedProps
     const snapToken = pageSharedProps.flash?.snap_token;
-    const midtransClientKey = pageSharedProps.midtrans_client_key; // No need for fallback, should be in shared props
+    const midtransClientKey = pageSharedProps.midtrans_client_key;
     const initialStatusMessageFromFlash = pageSharedProps.flash?.success_payment_initiation;
     const errorFromFlash = pageSharedProps.flash?.error;
 
+    logDebug('Props diterima:', props);
+    logDebug('Shared props dari usePage:', pageSharedProps);
+    logDebug('Ekstraksi variabel:', { snapToken, midtransClientKey, initialStatusMessageFromFlash, errorFromFlash });
 
     const [statusMessage, setStatusMessage] = useState<string>(initialStatusMessageFromFlash || 'Mempersiapkan pembayaran Anda...');
     const [errorMessage, setErrorMessage] = useState<string | null>(errorFromFlash || null);
     const [isMidtransPopupOpen, setIsMidtransPopupOpen] = useState(false);
 
-
     useEffect(() => {
+        logDebug('--- useEffect triggered ---');
+        logDebug('Dependencies:', { snapToken, midtransClientKey, transactionId, orderStatus });
+
         if (!snapToken) {
+            logDebug('VALIDATION FAILED: Snap Token tidak ditemukan.');
             setErrorMessage('Token pembayaran tidak ditemukan. Tidak dapat melanjutkan.');
             setStatusMessage('Gagal memuat pembayaran.');
             return;
         }
         if (!midtransClientKey) {
+            logDebug('VALIDATION FAILED: Kunci klien Midtrans tidak ditemukan.');
             setErrorMessage('Kunci klien Midtrans tidak dikonfigurasi. Tidak dapat melanjutkan.');
             setStatusMessage('Gagal memuat pembayaran.');
             return;
         }
         if (orderStatus !== 'pending') {
+            logDebug(`VALIDATION FAILED: Status pesanan adalah "${orderStatus}", bukan "pending".`);
             setErrorMessage(`Status pesanan adalah "${orderStatus}", pembayaran tidak dapat dilanjutkan.`);
             setStatusMessage('Pembayaran tidak dapat diproses.');
             const timer = setTimeout(() => {
+                 logDebug('Redirecting karena status pesanan tidak valid...');
                  router.visit(route('client.orders.show', transactionId));
             }, 3000);
             return () => clearTimeout(timer);
         }
 
+        logDebug('Validasi awal berhasil. Memanggil loadMidtransSnapScript.');
         loadMidtransSnapScript(midtransClientKey,
-            () => { // onLoaded
+            () => { // onLoaded callback
+                logDebug('Callback onLoaded dari loadMidtransSnapScript dijalankan.');
                 if (window.snap && snapToken && !isMidtransPopupOpen) {
                     setIsMidtransPopupOpen(true);
+                    logDebug('Siap memanggil window.snap.pay dengan token:', snapToken);
                     setStatusMessage('Mengalihkan ke halaman pembayaran Midtrans...');
                     window.snap.pay(snapToken, {
                         onSuccess: (result: any) => {
                             setIsMidtransPopupOpen(false);
-                            console.log('Midtrans Payment Success (PaymentInitiatePage):', result);
-                            setStatusMessage('Pembayaran berhasil! Mengalihkan...');
+                            logDebug('Midtrans Callback: onSuccess', result);
+                            setStatusMessage('Pembayaran berhasil! Mengalihkan ke rincian pesanan...');
+                            logDebug('Redirecting (onSuccess) ke client.orders.show');
+                            router.visit(route('client.orders.show', transactionId), {
+                                preserveState: false,
+                                preserveScroll: false,
+                            });
                         },
                         onPending: (result: any) => {
                             setIsMidtransPopupOpen(false);
-                            console.log('Midtrans Payment Pending (PaymentInitiatePage):', result);
-                            setStatusMessage('Pembayaran Anda tertunda. Mengalihkan...');
+                            logDebug('Midtrans Callback: onPending', result);
+                            setStatusMessage('Pembayaran Anda sedang diproses. Mengalihkan ke rincian pesanan...');
+                             logDebug('Redirecting (onPending) ke client.orders.show');
+                            router.visit(route('client.orders.show', transactionId), {
+                                preserveState: false,
+                                preserveScroll: false,
+                            });
                         },
                         onError: (result: any) => {
                             setIsMidtransPopupOpen(false);
-                            console.error('Midtrans Payment Error (PaymentInitiatePage):', result);
-                            setErrorMessage('Terjadi kesalahan saat proses pembayaran dengan Midtrans. Silakan coba lagi dari halaman detail pesanan.');
+                            console.error('[PaymentInitiatePage ERROR] Midtrans Callback: onError', result);
+                            setErrorMessage('Terjadi kesalahan saat proses pembayaran dengan Midtrans. Silakan coba lagi.');
                             setStatusMessage('Gagal memproses pembayaran.');
-                             router.visit(route('client.orders.show', transactionId));
+                            logDebug('Redirecting (onError) ke client.orders.show');
+                            router.visit(route('client.orders.show', transactionId));
                         },
                         onClose: () => {
                             setIsMidtransPopupOpen(false);
-                            console.log('Midtrans payment popup closed by user (PaymentInitiatePage)');
+                            logDebug('Midtrans Callback: onClose (popup ditutup oleh user)');
                             setStatusMessage('Anda menutup jendela pembayaran. Mengalihkan ke rincian pesanan...');
+                            logDebug('Redirecting (onClose) ke client.orders.show');
                             router.visit(route('client.orders.show', transactionId), {
                                 preserveState: false,
                                 preserveScroll: false,
                             });
                         }
                     });
-                } else if (!snapToken && !isMidtransPopupOpen){
-                     setErrorMessage('Token pembayaran tidak valid atau sudah digunakan.');
-                     setStatusMessage('Gagal memulai pembayaran.');
-                } else if (!window.snap && !isMidtransPopupOpen) {
-                    setErrorMessage('Gagal menginisialisasi Midtrans Snap.');
-                    setStatusMessage('Gagal memuat pembayaran.');
+                } else {
+                     logDebug('Kondisi untuk membuka snap.pay tidak terpenuhi.', { hasSnap: !!window.snap, hasSnapToken: !!snapToken, isPopupOpen: isMidtransPopupOpen });
+                     if (!snapToken && !isMidtransPopupOpen){
+                         setErrorMessage('Token pembayaran tidak valid atau sudah digunakan.');
+                         setStatusMessage('Gagal memulai pembayaran.');
+                     } else if (!window.snap && !isMidtransPopupOpen) {
+                        setErrorMessage('Gagal menginisialisasi Midtrans Snap.');
+                        setStatusMessage('Gagal memuat pembayaran.');
+                    }
                 }
             },
-            () => { // onError loading script
+            () => { // onError callback (script failed to load)
+                logDebug('Callback onError dari loadMidtransSnapScript dijalankan.');
                 setErrorMessage('Tidak dapat memuat skrip pembayaran Midtrans. Periksa koneksi internet Anda.');
                 setStatusMessage('Gagal memuat pembayaran.');
             }
         );
-    }, [snapToken, midtransClientKey, transactionId, orderStatus]); // Removed isMidtransPopupOpen from deps
+    }, [snapToken, midtransClientKey, transactionId, orderStatus]);
 
     const formatCurrency = (amount: number | string): string => {
         const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -163,21 +208,21 @@ export default function PaymentInitiatePage(props: PaymentInitiatePageSpecificPr
                             <span>{statusMessage}</span>
                         </div>
                     )}
-                    
+
                     <p className="text-sm text-gray-500 mt-4">
                         Anda akan diarahkan ke Midtrans untuk menyelesaikan pembayaran.
                         Jika jendela pembayaran tidak muncul, pastikan pop-up diizinkan.
                     </p>
                      <div className="mt-8">
-                        <Link 
-                            href={route('client.orders.show', transactionId)} 
+                        <Link
+                            href={route('client.orders.show', transactionId)}
                             className="text-sm text-gray-500 hover:text-gray-700 underline"
                         >
                             Lihat Detail Pesanan / Coba Bayar Manual
                         </Link>
                          <span className="mx-2 text-gray-400">|</span>
-                        <Link 
-                            href={route('pesanan-saya')} 
+                        <Link
+                            href={route('pesanan-saya')}
                             className="text-sm text-green-600 hover:text-green-700 underline"
                         >
                             ke pesanan saya

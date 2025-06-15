@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use App\Models\Address;
 use App\Models\Contact;
+use App\Models\Voucher; // DITAMBAH: Import model Voucher
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Midtrans\Config as MidtransConfig;
 use Midtrans\Snap as MidtransSnap;
-use Carbon\Carbon;
+use Carbon\Carbon; // DITAMBAH: Import Carbon
 
 class CartController extends Controller
 {
@@ -27,7 +28,7 @@ class CartController extends Controller
         MidtransConfig::$is3ds = config('midtrans.is_3ds');
     }
 
-    public function index()
+    public function index(Request $request) // PERUBAHAN: Tambahkan Request untuk membaca parameter URL
     {
         $cartItemsSession = session('cart', []);
         $items = [];
@@ -35,6 +36,8 @@ class CartController extends Controller
         $totalItemDiscount = 0;
         $userContactsWithAddresses = [];
         $authUser = Auth::user();
+        $appliedVoucher = null; // DITAMBAH: Untuk menyimpan voucher yang mungkin sudah diterapkan/dipilih
+        $voucherDiscountAmount = 0; // DITAMBAH: Inisialisasi diskon voucher
 
         if ($authUser) {
             // Eager load contacts and their addresses
@@ -102,6 +105,66 @@ class CartController extends Controller
         $shippingCostForDelivery = (float) config('shop.delivery_fee', 0);
         $grandTotal = ($subtotal - $totalItemDiscount) + $shippingCostForDelivery;
 
+        // DITAMBAH: Logika untuk voucher di halaman Cart
+        // Jika ada voucher_code di URL atau di session
+        $selectedVoucherCode = $request->input('voucher_code', session('selected_voucher_code'));
+        if ($selectedVoucherCode) {
+            $voucher = Voucher::where('code', $selectedVoucherCode)
+                                ->where('is_active', true)
+                                ->where('valid_from', '<=', Carbon::now())
+                                ->where('valid_until', '>=', Carbon::now())
+                                ->first();
+
+            if ($voucher) {
+                // Validasi tambahan: cek usage_limit (jika ada) dan min_purchase_amount
+                if ($voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit) {
+                    session()->forget('selected_voucher_code'); // Hapus dari session jika sudah habis
+                    return redirect()->back()->with('error', 'Voucher ini sudah habis.');
+                }
+
+                // Hitung subtotal setelah diskon item (harus dihitung di sini atau dilewatkan)
+                $subtotalAfterItemDiscount = $subtotal - $totalItemDiscount;
+
+                if ($subtotalAfterItemDiscount < $voucher->min_purchase_amount) {
+                     session()->forget('selected_voucher_code'); // Hapus dari session jika syarat tidak terpenuhi
+                     return redirect()->back()->with('error', 'Minimum pembelian untuk voucher ini belum terpenuhi.');
+                }
+
+                // DITAMBAH: Specific logic for "MINIMAL BELI 20 ITEM" on client-side loading
+                // This requires iterating through cart items to get total quantity
+                $totalItemsInCart = 0;
+                foreach ($items as $cartItem) {
+                    $totalItemsInCart += $cartItem['quantity'];
+                }
+                if ($voucher->code === 'MIN20ITEM10' && $totalItemsInCart < 20) {
+                    session()->forget('selected_voucher_code');
+                    return redirect()->back()->with('error', "Untuk voucher 'MINIMAL BELI 20 ITEM', Anda harus membeli minimal 20 item.");
+                }
+
+
+                $appliedVoucher = $voucher;
+                if ($voucher->discount_type === 'percentage') {
+                    $calculatedDiscount = ($subtotalAfterItemDiscount) * ($voucher->discount_value / 100);
+                    if ($voucher->max_discount_amount !== null && $calculatedDiscount > $voucher->max_discount_amount) {
+                        $voucherDiscountAmount = $voucher->max_discount_amount;
+                    } else {
+                        $voucherDiscountAmount = $calculatedDiscount;
+                    }
+                } else { // fixed
+                    $voucherDiscountAmount = $voucher->discount_value;
+                }
+
+                $grandTotal -= $voucherDiscountAmount; // Kurangi grand total dengan diskon voucher
+                session(['selected_voucher_code' => $selectedVoucherCode]); // Simpan ke session
+            } else {
+                session()->forget('selected_voucher_code'); // Hapus dari session jika tidak valid
+                return redirect()->back()->with('error', 'Voucher tidak ditemukan atau tidak berlaku.');
+            }
+        } else {
+            session()->forget('selected_voucher_code'); // Pastikan tidak ada voucher di session jika tidak ada di URL
+        }
+        // AKHIR PENAMBAHAN VOUCHER DI INDEX
+
         return Inertia::render('clients/Cart', [
             'items' => $items,
             'subtotal' => (float)$subtotal,
@@ -113,6 +176,16 @@ class CartController extends Controller
                 'name' => $authUser ? $authUser->name : 'Guest',
                 'email' => $authUser ? $authUser->email : null,
             ],
+            'appliedVoucher' => $appliedVoucher ? [ // DITAMBAH: Kirim data voucher yang diterapkan
+                'id' => $appliedVoucher->id,
+                'code' => $appliedVoucher->code,
+                'description' => $appliedVoucher->description,
+                'discount_type' => $appliedVoucher->discount_type,
+                'discount_value' => (float)$appliedVoucher->discount_value,
+                'voucher_discount_amount' => (float)$voucherDiscountAmount, // Jumlah diskon voucher yang diterapkan
+                'min_purchase_amount' => (float)$appliedVoucher->min_purchase_amount,
+                'max_discount_amount' => (float)$appliedVoucher->max_discount_amount,
+            ] : null,
         ]);
     }
 
@@ -208,10 +281,12 @@ class CartController extends Controller
             'delivery_option' => 'required|in:delivery,pickup',
             'selected_contact_id' => 'required_if:delivery_option,delivery|nullable|exists:contacts,id', // New validation
             'selected_address_id' => 'required_if:delivery_option,delivery|nullable|exists:addresses,id', // New validation
+            'applied_voucher_id' => 'nullable|exists:vouchers,id', // DITAMBAH: Validasi untuk voucher_id
         ];
         $validationMessages = [
             'selected_contact_id.required_if' => 'Please select a recipient contact.',
             'selected_address_id.required_if' => 'Please select a delivery address.',
+            'applied_voucher_id.exists' => 'The selected voucher is invalid.', // DITAMBAH: Pesan validasi
         ];
 
         $request->validate($validationRules, $validationMessages);
@@ -240,7 +315,7 @@ class CartController extends Controller
             if (!$selectedAddress || $selectedAddress->contact_id !== $selectedContact->id) {
                 return back()->withErrors(['selected_address_id' => 'The selected address does not match the recipient contact.'])->withInput();
             }
-            
+
             $customerContactPhoneForMidtrans = $selectedContact->phone;
             $shippingContactPhoneForMidtrans = $selectedContact->phone;
             $shippingContactNameForMidtrans = $selectedContact->name;
@@ -253,6 +328,8 @@ class CartController extends Controller
 
         DB::beginTransaction();
         $midtrans_params = [];
+        $voucherDiscountAmount = 0; // DITAMBAH: Inisialisasi diskon voucher untuk transaksi
+
 
         try {
             $calculatedSubtotal = 0;
@@ -270,7 +347,7 @@ class CartController extends Controller
                     $selectedAddress->street, $selectedAddress->more, $selectedAddress->city,
                     $selectedAddress->province, $selectedAddress->post_code, $selectedAddress->country
                 ])));
-                $finalNote = "Recipient: {$shippingContactNameForMidtrans}\n" . 
+                $finalNote = "Recipient: {$shippingContactNameForMidtrans}\n" .
                              "Delivery to: " . $addressSummary . "\n---\n" . $finalNote;
             } elseif ($request->delivery_option === 'pickup') {
                 $finalNote = "Pickup from store.\n---\n" . $finalNote;
@@ -314,7 +391,49 @@ class CartController extends Controller
                 ];
             }
 
-            $grandTotalForTransaction = ($calculatedSubtotal - $calculatedTotalItemDiscount) + $shippingCost;
+            $subtotalAfterItemDiscount = $calculatedSubtotal - $calculatedTotalItemDiscount; // DITAMBAH: Hitung subtotal setelah diskon item
+
+            // DITAMBAH: Logika penerapan voucher
+            $appliedVoucher = null;
+            if ($request->filled('applied_voucher_id')) {
+                $voucher = Voucher::find($request->applied_voucher_id);
+
+                if ($voucher) {
+                    // Re-validasi voucher di server side saat checkout
+                    if (!$voucher->is_active || $voucher->valid_from > Carbon::now() || $voucher->valid_until < Carbon::now()) {
+                        throw new \Exception("Voucher tidak aktif atau sudah kedaluwarsa.");
+                    }
+                    if ($voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit) {
+                        throw new \Exception("Voucher ini sudah mencapai batas penggunaan.");
+                    }
+                    if ($subtotalAfterItemDiscount < $voucher->min_purchase_amount) {
+                         throw new \Exception("Minimum pembelian untuk voucher ini belum terpenuhi.");
+                    }
+
+                    // Specific logic for "MINIMAL BELI 20 ITEM"
+                    $totalItemsInCart = array_sum(array_column($midtransItemDetails, 'quantity')); // Hitung total kuantitas item
+                    if ($voucher->code === 'MIN20ITEM10' && $totalItemsInCart < 20) { // Assuming 'MIN20ITEM10' is the code for this voucher
+                        throw new \Exception("Untuk voucher 'MINIMAL BELI 20 ITEM', Anda harus membeli minimal 20 item.");
+                    }
+
+                    $appliedVoucher = $voucher;
+                    if ($voucher->discount_type === 'percentage') {
+                        $calculatedDiscount = $subtotalAfterItemDiscount * ($voucher->discount_value / 100);
+                        if ($voucher->max_discount_amount !== null && $calculatedDiscount > $voucher->max_discount_amount) {
+                            $voucherDiscountAmount = $voucher->max_discount_amount;
+                        } else {
+                            $voucherDiscountAmount = $calculatedDiscount;
+                        }
+                    } else { // fixed
+                        $voucherDiscountAmount = $voucher->discount_value;
+                    }
+                    // Pastikan diskon tidak melebihi subtotal
+                    $voucherDiscountAmount = min($voucherDiscountAmount, $subtotalAfterItemDiscount);
+                }
+            }
+            // AKHIR PENAMBAHAN VOUCHER DI CHECKOUT
+
+            $grandTotalForTransaction = ($subtotalAfterItemDiscount - $voucherDiscountAmount) + $shippingCost; // PERUBAHAN: Sesuaikan grand total dengan diskon voucher
 
             if ($shippingCost > 0) {
                 $midtransItemDetails[] = [
@@ -325,10 +444,24 @@ class CartController extends Controller
                 ];
             }
 
+            // DITAMBAH: Tambahkan diskon voucher sebagai item di Midtrans jika ada
+            if ($voucherDiscountAmount > 0) {
+                $midtransItemDetails[] = [
+                    'id'        => 'VOUCHER_DISCOUNT',
+                    'price'     => -1 * round($voucherDiscountAmount), // Diskon sebagai nilai negatif
+                    'quantity'  => 1,
+                    'name'      => 'Voucher Discount: ' . ($appliedVoucher ? $appliedVoucher->code : ''),
+                ];
+            }
+            // AKHIR PENAMBAHAN MIDTRANS ITEM VOUCHER
+
             $grandTotalForMidtrans = 0;
             foreach ($midtransItemDetails as $mi) {
                 $grandTotalForMidtrans += $mi['price'] * $mi['quantity'];
             }
+            // DITAMBAH: Pastikan total Midtrans tidak negatif
+            $grandTotalForMidtrans = max(0, $grandTotalForMidtrans);
+
 
             if ($grandTotalForMidtrans <= 0 && !empty($midtransItemDetails)) {
                 // Handle free orders
@@ -345,6 +478,8 @@ class CartController extends Controller
                 'shipping_cost' => $shippingCost,
                 'address_id' => ($request->delivery_option === 'delivery' && $selectedAddress) ? $selectedAddress->id : null,
                 'pickup_deadline' => $pickupDeadline,
+                'voucher_id' => $appliedVoucher ? $appliedVoucher->id : null, // DITAMBAH: Simpan ID voucher
+                'voucher_discount_amount' => $voucherDiscountAmount, // DITAMBAH: Simpan jumlah diskon voucher
             ]);
 
             foreach ($transactionDetailsData as $detail) {
@@ -357,6 +492,12 @@ class CartController extends Controller
                 ]);
                 $detail['item_model']->decrement('stock', $detail['quantity']);
             }
+
+            // DITAMBAH: Update used_count pada voucher jika ada
+            if ($appliedVoucher) {
+                $appliedVoucher->increment('used_count');
+            }
+            // AKHIR PENAMBAHAN UPDATE VOUCHER USED COUNT
 
             $midtransOrderId = 'RB-' . $transaction->id . '-' . time();
 
@@ -397,12 +538,14 @@ class CartController extends Controller
                 $transaction->save();
                 DB::commit();
                 session()->forget('cart');
+                session()->forget('selected_voucher_code'); // DITAMBAH: Hapus voucher dari session
                 Log::info("Checkout for order {$transaction->id} successful (Free Order).");
                 return redirect()->route('client.orders.show', $transaction->id)
                     ->with('success', 'Order placed successfully! This was a free order.');
             }
 
             session()->forget('cart');
+            session()->forget('selected_voucher_code'); // DITAMBAH: Hapus voucher dari session
             DB::commit();
 
             Log::info("Checkout for order {$transaction->id} successful. Midtrans Snap Token generated. Order ID for Midtrans: {$midtransOrderId}", ['params_to_midtrans' => $midtrans_params]);
@@ -416,4 +559,85 @@ class CartController extends Controller
             return back()->withErrors(['checkout_error' => 'Failed to place order: ' . $e->getMessage()])->withInput();
         }
     }
+
+    // DITAMBAH: Metode baru untuk validasi voucher secara real-time (opsional, tapi sangat disarankan)
+    public function validateVoucher(Request $request)
+    {
+        $request->validate([
+            'voucher_code' => 'required|string',
+            'current_subtotal' => 'required|numeric|min:0', // Subtotal setelah diskon item
+        ]);
+
+        $voucher = Voucher::where('code', $request->voucher_code)
+                            ->where('is_active', true)
+                            ->where('valid_from', '<=', Carbon::now())
+                            ->where('valid_until', '>=', Carbon::now())
+                            ->first();
+
+        if (!$voucher) {
+            return response()->json(['valid' => false, 'message' => 'Voucher tidak ditemukan atau tidak berlaku.'], 404);
+        }
+
+        if ($voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit) {
+            return response()->json(['valid' => false, 'message' => 'Voucher ini sudah habis.'], 400);
+        }
+
+        if ($request->current_subtotal < $voucher->min_purchase_amount) {
+            return response()->json(['valid' => false, 'message' => 'Minimum pembelian untuk voucher ini belum terpenuhi (min. ' . $this->formatCurrency($voucher->min_purchase_amount) . ').'], 400);
+        }
+
+        // DITAMBAH: Logic for "MINIMAL BELI 20 ITEM" in validateVoucher
+        // To accurately check 'MIN20ITEM10', we need the actual cart items to count total quantity.
+        // For simplicity here, we assume if this voucher is checked,
+        // it means the items are already in the cart.
+        // A more robust solution might pass total_item_quantity from frontend or re-calculate it here.
+        if ($voucher->code === 'MIN20ITEM10') {
+            $cartItemsSession = session('cart', []);
+            $totalItemsInCart = 0;
+            if (!empty($cartItemsSession)) {
+                foreach ($cartItemsSession as $itemId => $cartEntry) {
+                    $quantity = is_array($cartEntry) && isset($cartEntry['quantity']) ? (int)$cartEntry['quantity'] : (int)$cartEntry;
+                    $totalItemsInCart += $quantity;
+                }
+            }
+            if ($totalItemsInCart < 20) {
+                return response()->json(['valid' => false, 'message' => "Untuk voucher 'MINIMAL BELI 20 ITEM', Anda harus membeli minimal 20 item."], 400);
+            }
+        }
+        // AKHIR PENAMBAHAN LOGIC MIN20ITEM10 DI VALIDATE VOUCHER
+
+        $calculatedDiscount = 0;
+        if ($voucher->discount_type === 'percentage') {
+            $calculatedDiscount = $request->current_subtotal * ($voucher->discount_value / 100);
+            if ($voucher->max_discount_amount !== null && $calculatedDiscount > $voucher->max_discount_amount) {
+                $calculatedDiscount = $voucher->max_discount_amount;
+            }
+        } else { // fixed
+            $calculatedDiscount = $voucher->discount_value;
+        }
+
+        // Pastikan diskon tidak melebihi subtotal
+        $calculatedDiscount = min($calculatedDiscount, $request->current_subtotal);
+
+        return response()->json([
+            'valid' => true,
+            'voucher' => [
+                'id' => $voucher->id,
+                'code' => $voucher->code,
+                'description' => $voucher->description,
+                'discount_type' => $voucher->discount_type,
+                'discount_value' => (float)$voucher->discount_value,
+                'min_purchase_amount' => (float)$voucher->min_purchase_amount,
+                'max_discount_amount' => (float)$voucher->max_discount_amount,
+            ],
+            'discount_amount' => (float)$calculatedDiscount,
+        ]);
+    }
+
+    // DITAMBAH: Helper function untuk format mata uang
+    private function formatCurrency($amount): string
+    {
+        return 'Rp ' . number_format($amount, 0, ',', '.');
+    }
+    // AKHIR PENAMBAHAN HELPER FUNCTION
 }

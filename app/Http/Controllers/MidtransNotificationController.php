@@ -20,9 +20,10 @@ class MidtransNotificationController extends Controller
     }
 
     public function handle(Request $request)
-    {
+    {   
+        
         Log::info('Midtrans notification received:', $request->all());
-
+        \Log::info('✅ Masuk ke Midtrans Notification Controller', $request->all());
         try {
             // Terima notifikasi dalam bentuk JSON
             $notification = new MidtransNotification(); // Secara otomatis akan mengambil payload dari php://input

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, usePage } from "@inertiajs/react";
-import { MapPin } from "lucide-react";
+import { Link, usePage } from "@inertiajs/react"; // Pastikan Link diimpor
+import { MapPin } from "lucide-react"; // MapPin tidak digunakan, bisa dihapus jika tidak ada lagi
 import axios from 'axios';
+
 declare function route(name: string, params?: Record<string, any>): string;
 
 type HeaderLayoutProps = {
@@ -55,22 +56,14 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({ className = "" }) => {
     >
       <div className="text-black text-sm py-2 md:py-0">
         🌟 Get 5% Off your first order,{" "}
-        <Link href="#" className="text-[#51793E] font-bold underline">
-          Promo: ORDER5
+        {/* PERUBAHAN DI SINI: Ganti Link '#' ke rute cart dengan voucher_code */}
+        <Link href={route('client.cart.index', { voucher_code: 'FIRSTORDER5' })} className="text-[#51793E] font-bold underline">
+          Promo: FIRSTORDER5
         </Link>
       </div>
 
-      <div className="flex gap-2 items-center text-black text-sm py-2 md:py-0">
-        <MapPin size={16}/>
-        <p className="text-black">
-          <strong>Jl. Telang Indah Barat, Bangkalan</strong>
-        </p>
-        <Link href="#" className="text-[#51793E] font-bold underline text-xs md:text-sm">
-          Change
-        </Link>
-      </div>
-      <Link 
-        href={route('client.cart.index')} 
+      <Link
+        href={route('client.cart.index')}
         className="flex items-center gap-1 h-full text-white bg-[#028643] rounded-b-2xl md:rounded-b-none md:rounded-bl-2xl text-sm w-full md:w-auto justify-center py-2 md:py-0 order-first md:order-last mt-2 md:mt-0"
       >
         <img src="/svg/cart.svg" alt="cart" className="h-10 md:h-14 w-12 md:w-20 p-1 md:p-2" />

@@ -1,4 +1,4 @@
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useEffect, useRef } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import { Head, useForm } from '@inertiajs/react';
 
@@ -12,6 +12,12 @@ export default function ConfirmPassword() {
       password: '',
     });
 
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    passwordRef.current?.focus();
+  }, []);
+
   const submit: FormEventHandler = (e) => {
     e.preventDefault();
     post(route('password.confirm'), {
@@ -20,43 +26,41 @@ export default function ConfirmPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-4 flex flex-col">
-      <div className="mt-4 flex justify-center md:justify-start">
+    <div className="min-h-screen bg-white p-2 sm:p-4 flex flex-col">
+      <div className="mt-4 flex justify-center lg:justify-start">
         <img 
-          src="RB-Store1.png" 
+          src="/RB-Store1.png"
           alt="RB Store Logo" 
-          className="rounded-lg w-25 h-auto mb-6"
+          className="rounded-lg w-28 lg:w-35 h-auto mb-4 lg:mb-6"
         />
       </div>
-
-      <div className="flex-grow flex flex-col md:flex-row border border-gray-200 rounded-t-7xl overflow-hidden">
-        {/* Left Side */}
-        <div className="bg-white md:w-2/3 flex flex-col p-8 justify-center">
-          <div className="w-full px-2 md:px-12">
-            <p className="text-[#51793E] text-sm md:text-1xl font-semibold mb-1 md:mb-4 leading-relaxed">
+      <div className="flex-grow flex flex-col lg:flex-row border border-gray-200 rounded-t-3xl lg:rounded-t-7xl overflow-hidden">
+        
+        {/* --- SISI KIRI (KONTEN) --- */}
+        <div className="bg-white lg:w-2/3 flex flex-col p-4 lg:p-8 justify-center">
+          <div className="w-full px-2 lg:px-12">
+            <p className="text-[#51793E] text-base lg:text-2xl font-semibold mb-2 lg:mb-4 leading-relaxed">
               Pesan aneka kue tradisional, kudapan siap saji dan penawaran spesial lainya!
             </p>
-
-            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-1 leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-6xl font-bold text-gray-900 mb-1 leading-tight">
               Cita Rasa Nusantara,
             </h2>
-            <h3 className="text-[#51793E] text-3xl md:text-5xl font-bold leading-tight">
-              Tradisi dalam <br /> Genggaman
+            <h3 className="text-[#51793E] text-4xl sm:text-3xl lg:text-5xl font-bold leading-tight">
+              Tradisi dalam <br className="hidden sm:block"></br> Genggaman
             </h3>
-
-            <div className="relative -mt-25 md:-mt-35 flex justify-center md:justify-end md:-mr-4 z-20">
+            <div className="relative -mt-12 sm:-mt-20 lg:-mt-35 flex justify-center lg:justify-end lg:-mr-4 z-10">
               <img 
-                src="/img/klepon.png" 
-                alt="Klepon - Traditional Indonesian dessert" 
-                className="rounded-lg max-w-[550px] md:max-w-[620px] h-auto drop-shadow-2xl"
+                src="/img/klepon.png"
+                alt="Klepon - Traditional Indonesian dessert"
+                className="rounded-lg w-full max-w-xs sm:max-w-sm lg:max-w-[620px] h-auto drop-shadow-2xl"
               />
             </div>
           </div>
         </div>
-
-        {/* Right Side */}
-        <div className="bg-[#51793E] md:w-1/2 flex items-center justify-center p-6 relative overflow-hidden rounded-l-[100px]">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        
+        {/* --- SISI KANAN (FORMULIR) --- */}
+        <div className="bg-[#51793E] lg:w-1/2 p-6 lg:p-12 relative rounded-tl-[120px] lg:rounded-tl-[500px] mt-12 lg:mt-0 lg:flex lg:items-center lg:justify-center"> 
+          <div className="w-full max-w-md bg-white rounded-lg p-6 shadow-lg relative lg:absolute z-20 lg:-mt-2 lg:translate-x-12">
             <Head title="Confirm Password" />
             
             <div className="mb-6">
@@ -72,6 +76,7 @@ export default function ConfirmPassword() {
                   Password
                 </label>
                 <Input
+                  ref={passwordRef}
                   id="password"
                   type="password"
                   placeholder="Masukkan password Anda"
@@ -79,7 +84,6 @@ export default function ConfirmPassword() {
                   required
                   value={data.password}
                   onChange={(e) => setData('password', e.target.value)}
-                  autoFocus
                   autoComplete="current-password"
                 />
                 <InputError message={errors.password} />
@@ -88,7 +92,7 @@ export default function ConfirmPassword() {
               <div className="flex justify-center mt-2">
                 <Button
                   type="submit"
-                  className="bg-[#51793E] hover:bg-[#3f5d31] text-white flex items-center justify-center py-2 px-6 rounded-md"
+                  className="bg-[#51793E] hover:bg-[#3f5d31] text-white flex items-center justify-center py-2 px-6 rounded-md w-full"
                   disabled={processing}
                 >
                   {processing ? (

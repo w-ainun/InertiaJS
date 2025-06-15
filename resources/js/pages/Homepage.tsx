@@ -1,45 +1,46 @@
 import Jumbotron from "@/components/layouts/jumbotron";
 import CustomerReview from "@/components/layouts/review";
 import AppTemplate from "@/components/templates/app-template";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react"; // Pastikan Link diimpor
 
 import FaqLayout from "@/components/layouts/faqlayout";
 
 interface Item {
   id: number;
-  name: string;           // Changed from 'nama'
-  description: string;    // Changed from 'deskripsi'
-  price: number;         // Changed from 'harga'
-  image_url: string;     // Changed from 'gambar_url'
+  name: string;
+  description: string;
+  price: number;
+  image_url: string;
   category_slug: string;
   expired_at: string;
   stock?: number;
 }
 
 const Menu = () => {
-  const { items, search, total } = usePage().props as { 
-    items: Item[], 
-    search: string,
-    total: number 
+  type PageProps = {
+    items: Item[];
+    search: string;
+    total: number;
   };
 
+  const { items, search, total } = usePage<PageProps>().props;
   console.log('Search Results:', { items, search, total });
 
   return (
     <AppTemplate className="bg-[#FFFFFF]">
       <Jumbotron />
-      
+
       {/* Search Results Section */}
       {search && (
         <div id="search-results" className="mx-16 mt-8 text-black">
           <h2 className="text-2xl font-bold mb-6">
             Hasil pencarian untuk "{search}" ({total || 0} hasil)
           </h2>
-          
+
           {items && items.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {items.map((item) => (
-                <div 
+                <div
                   key={item.id}
                   className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
@@ -60,7 +61,7 @@ const Menu = () => {
                       <span className="text-gray-400">Tidak ada gambar</span>
                     </div>
                   )}
-                  
+
                   {/* Content Section */}
                   <div className="p-4">
                     <h3 className="font-semibold text-lg">{item.name}</h3>
@@ -69,8 +70,8 @@ const Menu = () => {
                       <span className="text-[#51793E] font-bold text-lg">
                         Rp {item.price?.toLocaleString('id-ID')}
                       </span>
-                      <button 
-                        className="px-4 py-2 bg-[#51793E] text-white rounded-full text-sm 
+                      <button
+                        className="px-4 py-2 bg-[#51793E] text-white rounded-full text-sm
                                  hover:bg-[#3f5e30] transition-colors duration-300"
                       >
                         Pesan
@@ -87,7 +88,7 @@ const Menu = () => {
               </p>
               <Link
                 href="/"
-                className="inline-block mt-4 px-6 py-2 bg-[#51793E] text-white 
+                className="inline-block mt-4 px-6 py-2 bg-[#51793E] text-white
                          rounded-full text-sm hover:bg-[#3f5e30] transition-colors"
               >
                 Cari Lagi
@@ -96,114 +97,79 @@ const Menu = () => {
           )}
         </div>
       )}
-      
+
+      <main className="mx-16">
+        <div id="hero-section">
+          <div id="nav" className="mt-10 flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Up to -100%🎊RB Store exclusive deals</h1>
+          </div>
+
+          <div className="mt-6 flex gap-2.5 overflow-auto">
+            {/* VOUCHER 1: Diskon 5% PEMBELIAN PERTAMA */}
+            <Link href="/menu#vouchers-section" className="relative h-60 w-full rounded-2xl bg-[url('/img/dadar-gulung.png')] bg-cover bg-center">
+              <h1 className="pt-44 pl-10 text-[#51793E]">Diskon 5%</h1>
+              <p className="pl-10 text-2xl font-bold text-white">PEMBELIAN PERTAMA</p>
+              <div className="absolute top-0 right-4 flex h-14 w-20 items-center justify-center rounded-b-2xl bg-black font-bold text-white">
+                -5%
+              </div>
+            </Link>
+            {/* VOUCHER 2: Diskon 10% MINIMAL BELI 20 ITEM */}
+            <Link href="/menu#vouchers-section" className="relative h-60 w-full rounded-2xl bg-[url('/img/es-teler.png')] bg-cover bg-center">
+              <h1 className="pt-44 pl-10 text-[#51793E]">Diskon 10% </h1>
+              <p className="pl-10 text-2xl font-bold text-white">MINIMAL BELI 20 ITEM</p>
+              <div className="absolute top-0 right-4 flex h-14 w-20 items-center justify-center rounded-b-2xl bg-black font-bold text-white">
+                -10%
+              </div>
+            </Link>
+            {/* VOUCHER 3: Gratis Sagu Mutiara PEMBELIAN 3 PIE */}
+            <Link href="/menu#vouchers-section" className="relative h-60 w-full rounded-2xl bg-[url('/img/sagu-mutiara.png')] bg-cover bg-center">
+              <h1 className="pt-44 pl-10 text-[#51793E]">Gratis Sagu Mutiara</h1>
+              <p className="pl-10 text-2xl font-bold text-white">PEMBELIAN 3 PIE</p>
+              <div className="absolute top-0 right-4 flex h-14 w-20 items-center justify-center rounded-b-2xl bg-black font-bold text-white">
+                -100%
+              </div>
+            </Link>
+          </div>
+        </div>
+      </main>
       {/* RB Store paling populer section */}
-      {/* <div className="mx-16 mt-16 text-black">
+      <div className="mx-16 mt-16 text-black">
         <h2 className="text-2xl font-bold mb-8">RB Store paling populer! 😋</h2>
-        
+
         <div className="grid grid-cols-6 gap-6">
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-2xl bg-[url('/img/kue-basah.png')] bg-cover bg-center mb-3"></div>
-            <p className="text-sm font-medium text-center">Kue Basah</p>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-2xl bg-[url('/img/kue-kering.png')] bg-cover bg-center mb-3"></div>
-            <p className="text-sm font-medium text-center">Kue Kering</p>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-2xl bg-[url('/img/kue-modern.png')] bg-cover bg-center mb-3"></div>
-            <p className="text-sm font-medium text-center">Kue Modern</p>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-2xl bg-[url('/img/gorengan.png')] bg-cover bg-center mb-3"></div>
-            <p className="text-sm font-medium text-center">Gorengan</p>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-2xl bg-[url('/img/minuman.png')] bg-cover bg-center mb-3"></div>
-            <p className="text-sm font-medium text-center">Minuman</p>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-2xl bg-[url('/img/puding.png')] bg-cover bg-center mb-3"></div>
-            <p className="text-sm font-medium text-center">Puding</p>
-          </div>
-        </div>
-      </div> */}
+          <Link href="/menu/kue-basah" className="flex flex-col items-center hover:opacity-90 transition">
+            <div className="w-50 h-50 rounded-2xl bg-[url('/img/categories/kue-basah.png')] bg-cover bg-center mb-3"></div>
+            <p className="text-md font-medium text-center">Kue Basah</p>
+          </Link>
 
-      {/* Kenali Kelezatan section */}
-      {/* Commented out original section
-      <div className="mx-16 mt-20 bg-gray-50 rounded-2xl p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-4">Kenali Kelezatan dalam Genggaman!</h2>
-          <div className="flex justify-center gap-4">
-            <button className="px-6 py-2 bg-[#51793E] text-white rounded-full text-sm">
-              Pertanyaan Populer
-            </button>
-            <button className="px-6 py-2 bg-gray-200 text-gray-600 rounded-full text-sm">
-              Tentang Kami
-            </button>
-            <button className="px-6 py-2 bg-gray-200 text-gray-600 rounded-full text-sm">
-              Pusat Bantuan
-            </button>
-          </div>
-        </div>
+          <Link href="/menu/kue-kering" className="flex flex-col items-center hover:opacity-90 transition">
+            <div className="w-50 h-50 rounded-2xl bg-[url('/img/categories/kue-kering.png')] bg-cover bg-center mb-3"></div>
+            <p className="text-md font-medium text-center">Kue Kering</p>
+          </Link>
 
-        <div className="grid grid-cols-3 gap-8 mt-12">
-          <div className="text-center">
-            <div className="bg-[#51793E] rounded-2xl p-6 mb-4">
-              <h3 className="text-white font-bold mb-2">Cara pesan di RB Store? Simak caranya!</h3>
-              <p className="text-white text-sm">
-                Metode pembayaran apa yang bisa dipakai?
-              </p>
-              <p className="text-white text-sm mt-2">
-                Kapan dan bagaimana aku bisa lacak pesananku?
-              </p>
-              <p className="text-white text-sm mt-2">
-                Ada promo spesial? Yuk, dapatkan diskonmu!
-              </p>
-              <p className="text-white text-sm mt-2">
-                Apakah ada minimal order untuk setiap pemesanan?
-              </p>
-            </div>
-          </div>
+          <Link href="/menu/kue-modern" className="flex flex-col items-center hover:opacity-90 transition">
+            <div className="w-50 h-50 rounded-2xl bg-[url('/img/categories/kue-modern.png')] bg-cover bg-center mb-3"></div>
+            <p className="text-md font-medium text-center">Kue Modern</p>
+          </Link>
 
-          <div className="text-center">
-            <div className="bg-yellow-400 rounded-2xl p-6 mb-4 flex flex-col items-center">
-              <div className="text-6xl mb-2">🤝</div>
-              <h3 className="font-bold mb-2">Pesan Dalam Hitungan Detik!</h3>
-              <p className="text-sm">
-                Cukup kunjungi website kami untuk pesan kue favoritmu.
-              </p>
-            </div>
-          </div>
+          <Link href="/menu/gorengan" className="flex flex-col items-center hover:opacity-90 transition">
+            <div className="w-50 h-50 rounded-2xl bg-[url('/img/categories/gorengan.png')] bg-cover bg-center mb-3"></div>
+            <p className="text-md font-medium text-center">Gorengan</p>
+          </Link>
 
-          <div className="text-center">
-            <div className="bg-blue-400 rounded-2xl p-6 mb-4 flex flex-col items-center">
-              <div className="text-6xl mb-2">📱</div>
-              <h3 className="font-bold mb-2 text-white">Semua pembayaran bisa!</h3>
-              <p className="text-sm text-white">
-                Nikmati pengalaman cepat dengan kualitas terjaga
-              </p>
-            </div>
-          </div>
-        </div>
+          <Link href="/menu/minuman" className="flex flex-col items-center hover:opacity-90 transition">
+            <div className="w-50 h-50 rounded-2xl bg-[url('/img/categories/minuman.png')] bg-cover bg-center mb-3"></div>
+            <p className="text-md font-medium text-center">Minuman</p>
+          </Link>
 
-        <div className="mt-8 text-center text-sm text-gray-600">
-          <p>
-            RB Store menyediakan aneka kue tradisional Indonesia kualitas terjamin dengan 
-            pesanan dengan mudah tanpa perlu keluar dari rumah. Berbagai pilihan dan opsi 
-            terpercaya dan dengan pengalaman kuliner terlengkap di era kini yang lebih 
-            sempurna jika dinikmati bersama keluarga.
-          </p>
+          <Link href="/menu/puding" className="flex flex-col items-center hover:opacity-90 transition">
+            <div className="w-50 h-50 rounded-2xl bg-[url('/img/categories/puding.png')] bg-cover bg-center mb-3"></div>
+            <p className="text-md font-medium text-center">Puding</p>
+          </Link>
         </div>
       </div>
-      */}
-      
-      {/* New FAQ Layout Component */}
+
+
       <FaqLayout />
 
       {/* Statistics section */}

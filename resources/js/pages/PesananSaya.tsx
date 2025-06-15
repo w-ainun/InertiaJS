@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, JSX } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import { PageProps as InertiaBasePageProps } from '@inertiajs/core';
 import AppTemplate from "@/components/templates/app-template";

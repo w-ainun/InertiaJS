@@ -1,7 +1,7 @@
 import React, { useState, useEffect, FormEvent } from 'react';
-import { Head, useForm, router, Link } from '@inertiajs/react';
+import { Head, useForm, router, Link, usePage } from '@inertiajs/react'; // Import usePage
 import AppTemplate from '@/components/templates/app-template';
-import { ShoppingCart, MapPin, Truck, Building, ArrowRight, PlusCircle, Home, X, AlertTriangle, User, Phone } from 'lucide-react';
+import { ShoppingCart, MapPin, Truck, Building, ArrowRight, PlusCircle, Home, X, AlertTriangle, User, Phone, Gift } from 'lucide-react'; // Import Gift
 import axios from 'axios';
 import { Errors, ErrorBag } from '@inertiajs/core';
 
@@ -42,21 +42,32 @@ interface CartItem {
     discounted_total: number;
 }
 
+interface AppliedVoucher {
+    id: number;
+    code: string;
+    description: string;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+    voucher_discount_amount: number; // Jumlah diskon voucher yang diterapkan
+    min_purchase_amount: number;
+    max_discount_amount: number | null;
+}
+
 interface CheckoutFormData {
     note: string;
     delivery_option: 'delivery' | 'pickup';
     selected_address_id: number | null;
-    selected_contact_id: number | null; // Added for contact selection
-    [key: string]: any;
+    selected_contact_id: number | null;
+    applied_voucher_id: number | null; // Tambahkan ini
 }
 
 interface CartPageProps {
     items: CartItem[];
-    subtotal: number;
-    discount: number;
+    subtotal: number; // Subtotal produk sebelum diskon item
+    discount: number; // Total diskon dari item
     shipping: number;
-    total: number;
-    contactsWithAddresses: ContactWithAddresses[]; // Changed from 'addresses'
+    total: number; // Total akhir dari backend (sudah termasuk diskon voucher jika ada)
+    contactsWithAddresses: ContactWithAddresses[];
     user: UserInfo;
     errors: Errors & ErrorBag;
     flash: {
@@ -64,6 +75,7 @@ interface CartPageProps {
         error?: string;
         info?: string;
     };
+    appliedVoucher: AppliedVoucher | null; // Tambahkan ini
 }
 
 export default function Cart(props: CartPageProps) {
@@ -75,7 +87,8 @@ export default function Cart(props: CartPageProps) {
         contactsWithAddresses: initialContacts,
         user,
         errors: serverErrors,
-        flash
+        flash,
+        appliedVoucher: initialAppliedVoucher // Ambil initial applied voucher
     } = props;
 
     const getDefaultContactId = () => {
@@ -96,15 +109,22 @@ export default function Cart(props: CartPageProps) {
 
     const defaultContactId = getDefaultContactId();
 
-    const { data, setData, post, processing, errors: formErrors } = useForm<CheckoutFormData>({
+    const { data, setData, post, processing, errors: formErrors, setError, clearErrors } = useForm<CheckoutFormData>({ // Tambahkan setError, clearErrors
         note: '',
         delivery_option: 'delivery',
         selected_contact_id: defaultContactId,
         selected_address_id: getDefaultAddressId(defaultContactId),
+        applied_voucher_id: initialAppliedVoucher?.id || null, // Set initial applied voucher ID
     });
 
     const [currentShippingCost, setCurrentShippingCost] = useState(shipping);
-    const [pageMessage, setPageMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [pageMessage, setPageMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
+    const [voucherCodeInput, setVoucherCodeInput] = useState<string>(initialAppliedVoucher?.code || ''); // State untuk input kode voucher
+    const [displayedVoucher, setDisplayedVoucher] = useState<AppliedVoucher | null>(initialAppliedVoucher); // State untuk voucher yang ditampilkan di UI
+    const [voucherLoading, setVoucherLoading] = useState(false);
+
+    // Hitung subtotal setelah diskon item
+    const subtotalAfterItemDiscount = subtotal - discount;
 
     useEffect(() => {
         if (flash?.success) setPageMessage({ type: 'success', text: flash.success });
@@ -131,7 +151,21 @@ export default function Cart(props: CartPageProps) {
         }
     }, [data.delivery_option, shipping, initialContacts]);
 
-    const finalTotal = subtotal - discount + currentShippingCost;
+    // Update displayedVoucher ketika initialAppliedVoucher berubah (dari refresh halaman atau link dari menu)
+    useEffect(() => {
+        setDisplayedVoucher(initialAppliedVoucher);
+        if (initialAppliedVoucher) {
+            setVoucherCodeInput(initialAppliedVoucher.code);
+            setData('applied_voucher_id', initialAppliedVoucher.id);
+        } else {
+            setVoucherCodeInput('');
+            setData('applied_voucher_id', null);
+        }
+    }, [initialAppliedVoucher]);
+
+
+    // Gunakan total dari props, karena backend sudah menghitung diskon voucher
+    const finalTotal = props.total;
 
     const updateQuantity = (itemId: number, newQuantity: number) => {
         router.patch(route('client.cart.update'), {
@@ -159,25 +193,101 @@ export default function Cart(props: CartPageProps) {
         }));
     };
 
-   const handleCheckout = () => {
-    // Data yang akan dikirim diambil dari state 'data' milik useForm
-    const checkoutData = {
-        note: data.note,
-        delivery_option: data.delivery_option,
-        selected_contact_id: data.selected_contact_id,
-        selected_address_id: data.selected_address_id,
+    const handleApplyVoucher = async () => {
+        if (!voucherCodeInput) {
+            setPageMessage({ type: 'error', text: 'Silakan masukkan kode voucher.' });
+            return;
+        }
+        setVoucherLoading(true);
+        clearErrors('applied_voucher_id'); // Clear previous errors
+
+        try {
+            const response = await axios.post(route('client.cart.validateVoucher'), {
+                voucher_code: voucherCodeInput,
+                current_subtotal: subtotalAfterItemDiscount, // Kirim subtotal setelah diskon item
+            });
+
+            if (response.data.valid) {
+                const validatedVoucher = {
+                    id: response.data.voucher.id,
+                    code: response.data.voucher.code,
+                    description: response.data.voucher.description,
+                    discount_type: response.data.voucher.discount_type,
+                    discount_value: response.data.voucher.discount_value,
+                    min_purchase_amount: response.data.voucher.min_purchase_amount,
+                    max_discount_amount: response.data.voucher.max_discount_amount,
+                    voucher_discount_amount: response.data.discount_amount, // Diskon yang dihitung dari backend
+                };
+                setDisplayedVoucher(validatedVoucher);
+                setData('applied_voucher_id', validatedVoucher.id);
+                setPageMessage({ type: 'success', text: `Voucher '${voucherCodeInput}' berhasil diterapkan! Diskon: ${formatCurrency(response.data.discount_amount)}` });
+
+                // Redirect ke halaman cart dengan kode voucher di URL agar state terjaga saat refresh
+                router.visit(route('client.cart.index', { voucher_code: voucherCodeInput }), {
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+            } else {
+                setDisplayedVoucher(null);
+                setData('applied_voucher_id', null);
+                setPageMessage({ type: 'error', text: response.data.message || 'Voucher tidak valid.' });
+            }
+        } catch (error: any) {
+            setDisplayedVoucher(null);
+            setData('applied_voucher_id', null);
+            if (error.response && error.response.data && error.response.data.message) {
+                setPageMessage({ type: 'error', text: error.response.data.message });
+            } else {
+                setPageMessage({ type: 'error', text: 'Terjadi kesalahan saat menerapkan voucher.' });
+            }
+        } finally {
+            setVoucherLoading(false);
+        }
     };
 
-    console.log("Mencoba mengirim data dengan router.post:", checkoutData);
+    const handleRemoveVoucher = () => {
+        setDisplayedVoucher(null);
+        setVoucherCodeInput('');
+        setData('applied_voucher_id', null);
+        clearErrors('applied_voucher_id');
+        setPageMessage({ type: 'info', text: 'Voucher berhasil dihapus.' });
+        // Hapus voucher_code dari URL dan session
+        router.visit(route('client.cart.index'), {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
 
-    // Menggunakan router.post secara langsung, bukan 'post' dari useForm
-    router.post(route('client.cart.checkout'), checkoutData, {
-        onSuccess: () => window.dispatchEvent(new Event('cart-updated')),
-        onError: (errors) => {
-            console.error("Terjadi error dari server:", errors);
-        }
-    });
-};
+
+    const handleCheckout = () => {
+        const checkoutData = {
+            note: data.note,
+            delivery_option: data.delivery_option,
+            selected_contact_id: data.selected_contact_id,
+            selected_address_id: data.selected_address_id,
+            applied_voucher_id: data.applied_voucher_id, // Kirim ID voucher yang diterapkan
+        };
+
+        // console.log("Mencoba mengirim data dengan router.post:", checkoutData); // Debugging
+
+        router.post(route('client.cart.checkout'), checkoutData, {
+            onSuccess: () => {
+                window.dispatchEvent(new Event('cart-updated'));
+            },
+            onError: (errors) => {
+                console.error("Terjadi error dari server:", errors);
+                // Menampilkan pesan error dari backend ke pengguna
+                if (errors.checkout_error) {
+                    setPageMessage({ type: 'error', text: errors.checkout_error });
+                } else if (errors.applied_voucher_id) {
+                    setPageMessage({ type: 'error', text: errors.applied_voucher_id });
+                } else {
+                    setPageMessage({ type: 'error', text: 'Terjadi kesalahan saat memproses checkout.' });
+                }
+            }
+        });
+    };
+
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0
@@ -292,6 +402,45 @@ export default function Cart(props: CartPageProps) {
                                     )}
                                 </div>
 
+                                {/* Voucher Section */}
+                                <div className="bg-white rounded-lg shadow-md p-6">
+                                    <h2 className="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                                        <Gift className="w-6 h-6 text-purple-500 mr-3" /> Apply Voucher
+                                    </h2>
+                                    {displayedVoucher ? (
+                                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                                            <strong className="font-bold">Voucher Applied!</strong>
+                                            <span className="block sm:inline ml-2">{displayedVoucher.description} ({displayedVoucher.code})</span>
+                                            <span className="block sm:inline ml-2 font-semibold">Diskon: {formatCurrency(displayedVoucher.voucher_discount_amount)}</span>
+                                            <button onClick={handleRemoveVoucher} className="absolute top-0 bottom-0 right-0 px-4 py-3">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                value={voucherCodeInput}
+                                                onChange={(e) => setVoucherCodeInput(e.target.value.toUpperCase())}
+                                                placeholder="Enter voucher code"
+                                                className="flex-grow px-3 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                                                disabled={voucherLoading}
+                                            />
+                                            <button
+                                                onClick={handleApplyVoucher}
+                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-60"
+                                                disabled={voucherLoading || !voucherCodeInput}
+                                            >
+                                                {voucherLoading ? 'Applying...' : 'Apply'}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {formErrors.applied_voucher_id && (
+                                        <p className="text-red-500 text-sm mt-2">{formErrors.applied_voucher_id}</p>
+                                    )}
+                                </div>
+
+
                                 <div className="bg-white rounded-lg shadow-md">
                                     <h2 className="text-xl font-semibold text-gray-800 p-6 border-b border-gray-200"> Items in Cart ({items.length}) </h2>
                                     {items.map((item) => (
@@ -338,6 +487,9 @@ export default function Cart(props: CartPageProps) {
                                     <div className="space-y-2">
                                         <div className="flex justify-between"><span className="text-gray-600">Product Subtotal:</span><span className="font-semibold">{formatCurrency(subtotal)}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-600">Total Product Discount:</span><span className="font-semibold text-red-500">-{formatCurrency(discount)}</span></div>
+                                        {displayedVoucher && (
+                                            <div className="flex justify-between"><span className="text-gray-600">Voucher Discount:</span><span className="font-semibold text-red-500">-{formatCurrency(displayedVoucher.voucher_discount_amount)}</span></div>
+                                        )}
                                         <div className="flex justify-between"><span className="text-gray-600">Shipping Cost:</span><span className="font-semibold">{formatCurrency(currentShippingCost)}</span></div>
                                         <hr className="my-3" />
                                         <div className="flex justify-between text-lg"><span className="font-bold">Total Payment</span><span className="font-bold text-green-600">{formatCurrency(finalTotal)}</span></div>

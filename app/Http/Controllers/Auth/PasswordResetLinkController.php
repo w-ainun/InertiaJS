@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,10 +33,29 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
-        Password::sendResetLink(
-            $request->only('email')
-        );
+        try {
+            // We will send the password reset link to this user. Once we have attempted
+            // to send the link, we will examine the response then see the message we
+            // need to show to the user. Finally, we'll send out a proper response.
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
 
-        return back()->with('status', __('A reset link will be sent if the account exists.'));
+            if ($status == Password::RESET_LINK_SENT) {
+                return back()->with('status', __('Link reset password telah dikirim ke email Anda.'));
+            }
+
+            // If an error was returned by the password broker, we will get this message
+            // translated so we can notify a user of the problem. We'll redirect back
+            // to where the users came from so they can attempt this process again.
+            throw ValidationException::withMessages([
+                'email' => [($status)],
+            ]);
+        } catch (\Exception $e) {
+            // Log error untuk debugging
+            \Log::error('Password reset email error: ' . $e->getMessage());
+            
+            return back()->with('status', __('Link reset password telah dikirim jika email terdaftar.'));
+        }
     }
 }

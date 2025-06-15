@@ -1,8 +1,5 @@
-// resources/js/Pages/Client/OrderReceipt.tsx
 import React, { useEffect } from 'react';
-// Hapus semua import ikon Lucide
 
-// Mirror relevant interfaces from PesananSaya or define specifically for receipt
 interface BackendItem {
     id: number;
     name: string;
@@ -27,6 +24,14 @@ interface BackendAddress {
     country: string;
 }
 
+// Interface untuk Voucher yang digunakan dalam transaksi
+interface BackendVoucher {
+    id: number;
+    code: string;
+    description: string;
+    // Tambahkan properti lain dari voucher jika ingin ditampilkan
+}
+
 interface ClientInfo {
     id: number;
     name: string; // Or username
@@ -47,7 +52,9 @@ interface BackendTransaction {
     updated_at: string;
     shipping_number?: string | null;
     pickup_deadline?: string | null;
-    // client: ClientInfo; // User who made the order - passed as 'client' prop
+    voucher_id: number | null;
+    voucher_discount_amount: string; // Ini adalah string karena dari DB decimal
+    voucher?: BackendVoucher | null; // Detail voucher jika diload
 }
 
 interface StoreContact {
@@ -57,16 +64,14 @@ interface StoreContact {
     email: string;
 }
 
-// Changed from OrderReceiptPageProps to OrderReceiptProps to reflect direct props
 interface OrderReceiptProps {
     transaction: BackendTransaction;
     order_number_display: string;
     storeContact: StoreContact;
-    client: ClientInfo; // Tetap ada di props, tapi tidak ditampilkan jika tidak diminta
+    client: ClientInfo;
     deliveryAddress?: BackendAddress | null;
 }
 
-// Modified component signature to receive props directly
 const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_display, storeContact, client, deliveryAddress }) => {
 
     useEffect(() => {
@@ -81,13 +86,11 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
 
     const formatDate = (dateString?: string | null): string => {
         if (!dateString) return 'N/A';
-        // Mengubah format tanggal agar lebih sesuai dengan screenshot: 7 Juni 2025 pukul 13.17
         return new Date(dateString).toLocaleString('id-ID', {
             year: 'numeric', month: 'long', day: 'numeric',
-            hour: '2-digit', minute: '2-digit', hour12: false // Tambahkan hour12: false untuk format 24 jam
-        }).replace(/\s+pukul\s+/, ' pukul '); // Menyesuaikan teks "pukul"
+            hour: '2-digit', minute: '2-digit', hour12: false
+        }).replace(/\s+pukul\s+/, ' pukul ');
     };
-
 
     const calculateItemTotal = (detail: BackendTransactionDetail): number => {
         const price = parseFloat(detail.price_at_time);
@@ -98,15 +101,13 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
 
     const subtotalPreShipping = transaction.details.reduce((sum, detail) => sum + calculateItemTotal(detail), 0);
 
-    // Hardcode store name as requested
     const storeName = "RB Store";
 
-    // Fungsi untuk mendapatkan teks kurir berdasarkan opsi pengiriman
     const getCourierText = (deliveryOption: 'delivery' | 'pickup', shippingNumber?: string | null): string => {
         if (deliveryOption === 'pickup') {
-            return 'Diambil Pelanggan'; // Sesuai screenshot
+            return 'Diambil Pelanggan';
         }
-        return shippingNumber || 'Pengiriman Reguler'; // Jika ada nomor pengiriman, gunakan itu, jika tidak default
+        return shippingNumber || 'Pengiriman Reguler';
     };
 
     return (
@@ -141,13 +142,13 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
                 </div>
 
                 {/* Bagian No. Pesanan di paling atas, sesuai screenshot */}
-                <div className="mb-4 text-base"> {/* Ukuran teks lebih besar */}
+                <div className="mb-4 text-base">
                     <p><span className="text-gray-700">No. Pesanan</span></p>
-                    <p className="font-bold text-gray-900 text-xl mt-1">{order_number_display}</p> {/* Lebih besar dan bold */}
+                    <p className="font-bold text-gray-900 text-xl mt-1">{order_number_display}</p>
                 </div>
 
                 {/* Garis pemisah seperti di screenshot */}
-                <div className="thin-solid-line my-4"></div> {/* Margin atas dan bawah */}
+                <div className="thin-solid-line my-4"></div>
 
                 {/* Detail Layanan, Kurir, Tanggal Pesan, Metode Pembayaran */}
                 <div className="grid grid-cols-2 gap-y-2 gap-x-4 mb-6 text-sm">
@@ -155,7 +156,7 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
                     <div>
                         <p className="text-gray-700">Layanan:</p>
                         <p className="font-semibold text-gray-900 mt-0.5">
-                            {transaction.delivery_option === 'delivery' ? 'Pengiriman ke Alamat' : 'Pickup ke Toko'} {/* Sesuai screenshot: "Pickup ke Toko" */}
+                            {transaction.delivery_option === 'delivery' ? 'Pengiriman ke Alamat' : 'Pickup ke Toko'}
                         </p>
                     </div>
                     {/* Kolom Kanan */}
@@ -183,7 +184,7 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
                 {/* Garis tipis solid */}
                 <div className="thin-solid-line mb-6"></div>
 
-                {/* Detail Alamat Pengiriman (jika ada) - disisipkan di sini */}
+                {/* Detail Alamat Pengiriman (jika ada) */}
                 {transaction.delivery_option === 'delivery' && deliveryAddress && (
                     <div className="mb-6 text-sm">
                         <h3 className="font-bold text-gray-700 mb-2">Alamat Pengiriman:</h3>
@@ -202,7 +203,7 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
                     <div className="mb-6 text-sm">
                         <h3 className="font-bold text-gray-700 mb-2">Detail Pengambilan:</h3>
                         <p className="mt-2">Ambil Sebelum: <span className="font-medium ml-1">{formatDate(transaction.pickup_deadline)}</span></p>
-                        <p className="text-gray-700 mt-1">Lokasi Pengambilan: {storeContact.address}</p> {/* Menampilkan alamat toko */}
+                        <p className="text-gray-700 mt-1">Lokasi Pengambilan: {storeContact.address}</p>
                     </div>
                 )}
 
@@ -210,19 +211,6 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
                 {(transaction.delivery_option === 'delivery' && deliveryAddress) || (transaction.delivery_option === 'pickup' && transaction.pickup_deadline) ? (
                     <div className="thin-solid-line mb-6"></div>
                 ) : null}
-
-
-                {/* Pelanggan - Tidak ditampilkan jika mengikuti format "ginilo" yang tanpa info pelanggan eksplisit.
-                     Jika ingin ditampilkan, Anda bisa mengembalikannya di sini, mungkin di bawah detail pengiriman/pengambilan.
-                     Untuk saat ini, saya akan menyembunyikannya sesuai contoh screenshot Anda.
-                */}
-                {/* <div className="mb-6 text-sm">
-                    <h3 className="font-bold text-gray-700 mb-2">Pelanggan:</h3>
-                    <p className="mb-1"><span className="font-semibold text-gray-900">{client.name}</span></p>
-                    <p className="text-gray-600">{client.email}</p>
-                </div>
-                <div className="thin-solid-line mb-6"></div> */}
-
 
                 {/* Items Table */}
                 <div className="mb-6">
@@ -266,6 +254,17 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ transaction, order_number_d
                         <div className="flex justify-end mb-2 items-center">
                             <span className="w-2/5 text-right text-gray-700 pr-2">Ongkos Kirim:</span>
                             <span className="w-2/5 text-right font-semibold text-gray-900">{formatCurrency(transaction.shipping_cost)}</span>
+                        </div>
+                    )}
+                    {/* DITAMBAH: Potongan Voucher */}
+                    {transaction.voucher_id && parseFloat(transaction.voucher_discount_amount) > 0 && ( // Pastikan voucher_id ada dan diskon > 0
+                        <div className="flex justify-end mb-2 items-center">
+                            <span className="w-2/5 text-right text-gray-700 pr-2">
+                                Potongan Voucher ({transaction.voucher?.code || 'Voucher'}):
+                            </span>
+                            <span className="w-2/5 text-right font-semibold text-red-600">
+                                -{formatCurrency(transaction.voucher_discount_amount)}
+                            </span>
                         </div>
                     )}
                     <div className="dashed-line my-4"></div>
