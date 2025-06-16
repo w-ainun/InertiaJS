@@ -14,6 +14,7 @@ use App\Http\Controllers\Courier\CourierController;
 use App\Http\Controllers\Client\ProfileControllerClient;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\Client\ClientOrderActionController;
+use App\Http\Controllers\Client\RatingController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\MidtransNotificationController;
 use Illuminate\Support\Facades\Route;
@@ -181,7 +182,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [CourierController::class, 'index'])->name('courier.beranda');
         Route::patch('/update/{id}', [CourierController::class, 'update'])->name('courier.update');
 });
-
+ Route::middleware(['auth'])->group(function () { //
+    Route::post('/client/reviews', [RatingController::class, 'store'])->name('client.reviews.store');
+    Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store'); 
+});
 
 Route::post('/midtrans/webhook', [MidtransNotificationController::class, 'handle']);
 Route::get('/orders/{transaction}/status', [OrderController::class, 'checkStatus'])->name('client.orders.checkStatus');

@@ -63,4 +63,8 @@ class Transaction extends Model
     {
         return $this->belongsTo(Voucher::class, 'voucher_id', 'id'); // Pastikan 'voucher_id' adalah foreign key yang benar
     }
+    public function ratings(): HasMany // Add this relationship
+    {
+        return $this->hasMany(Rating::class, 'transaction_id', 'id'); //
+    }
 }

@@ -4,7 +4,7 @@ import { PageProps as InertiaBasePageProps } from '@inertiajs/core';
 import AppTemplate from "@/components/templates/app-template";
 import {
     ShoppingCart, User as UserIconLucide, Clock, ChevronLeft, Package, Truck, CheckCircle,
-    XCircle, Archive, Printer, Info, CalendarClock, Navigation, Phone, MapPin, Warehouse
+    XCircle, Archive, Printer, Info, CalendarClock, Navigation, Phone, MapPin, Warehouse, Star
 } from 'lucide-react';
 
 // --- INTERFACE & TIPE DATA ---
@@ -46,6 +46,19 @@ interface BackendTransactionDetail {
     discount_percentage_at_time: number | null;
 }
 
+// Menambahkan interface untuk Rating
+interface BackendRating {
+    id: number;
+    item_id: number;
+    transaction_id: number;
+    client_id: number;
+    score: number;
+    comment: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+
 interface BackendTransaction {
     id: number;
     order_number_display: string;
@@ -64,6 +77,7 @@ interface BackendTransaction {
     updated_at: string;
     user_marked_received_at?: string | null;
     pickup_deadline?: string | null;
+    ratings?: BackendRating[]; // Menambahkan field ratings ke transaksi
 }
 
 interface DeliveryOrderItem {
@@ -95,6 +109,7 @@ interface DeliveryOrder {
     clientName?: string;
     clientEmail?: string;
     clientPhone?: string;
+    ratings?: BackendRating[]; // Menambahkan field ratings ke DeliveryOrder
 }
 
 interface PesananSayaPageProps extends InertiaBasePageProps {
@@ -118,6 +133,14 @@ const PesananSaya: React.FC = () => {
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [isCompletingOrder, setIsCompletingOrder] = useState(false);
     const [localFlash, setLocalFlash] = useState<{ success?: string; error?: string } | null>(null);
+
+    // State untuk modal review
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [reviewScore, setReviewScore] = useState(0);
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewingTransactionId, setReviewingTransactionId] = useState<number | null>(null);
+    const [reviewingItemId, setReviewingItemId] = useState<number | null>(null);
+
 
     const page = usePage<PesananSayaPageProps>();
     const { activeOrders: rawActiveOrders, historicalOrders: rawHistoricalOrders, auth, flash } = page.props;
@@ -178,6 +201,7 @@ const PesananSaya: React.FC = () => {
             clientName: authUser?.username,
             clientEmail: authUser?.email,
             clientPhone: authUser?.contact?.phone || undefined,
+            ratings: transaction.ratings || [], // Pastikan ratings ikut ditransform
         };
     };
 
@@ -190,7 +214,10 @@ const PesananSaya: React.FC = () => {
         if (!orderId || isCompletingOrder) return;
         setIsCompletingOrder(true);
         router.post(route('client.orders.markReceived', { transaction: orderId }), {}, {
-            onSuccess: () => setSelectedOrderId(null),
+            onSuccess: () => {
+                setSelectedOrderId(null);
+                setLocalFlash({ success: "Status pesanan berhasil diperbarui menjadi Diterima/Diambil." });
+            },
             onError: (errs) => setLocalFlash({ error: Object.values(errs).join(' ') || "Gagal memperbarui status." }),
             onFinish: () => setIsCompletingOrder(false),
         });
@@ -248,7 +275,7 @@ const PesananSaya: React.FC = () => {
         } else if (deliveryOption === 'pickup' && isPaid) {
             steps.push({ key: 'ready', label: 'Siap Diambil', time: pickupDeadline || 'Tersedia di toko', active: true, color: 'purple', icon: <Archive/>, isCurrent: deliveryStatus === 'menunggu' && !['diterima', 'selesai'].includes(status) });
         }
-        
+
         if ((deliveryStatus === 'selesai' || ['diterima', 'selesai'].includes(status)) && isPaid) {
             const time = userMarkedReceivedAt || (status === 'diterima' ? formatDate(rawUpdatedAt) : 'Dikonfirmasi sistem');
             steps.push({ key: 'arrived', label: deliveryOption === 'pickup' ? 'Pesanan Diambil' : 'Pesanan Tiba', time, active: true, color: 'green', icon: <CheckCircle/>, isCurrent: status === 'diterima' });
@@ -263,11 +290,52 @@ const PesananSaya: React.FC = () => {
         return uniqueSteps.map(s => ({ ...s, isCurrent: lastActiveCurrent ? s.key === lastActiveCurrent.key : false }));
     };
 
+    // Fungsi untuk membuka modal review
+    const handleOpenReviewModal = (transactionId: number, itemId: number) => {
+        setReviewingTransactionId(transactionId);
+        setReviewingItemId(itemId);
+        setReviewScore(0);
+        setReviewComment('');
+        setIsReviewModalOpen(true);
+    };
+
+    // Fungsi untuk submit review
+    const handleSubmitReview = () => {
+        if (!reviewingTransactionId || !reviewingItemId || reviewScore === 0 || !authUser?.id) {
+            setLocalFlash({ error: "Data review tidak lengkap." });
+            return;
+        }
+
+        router.post(route('client.reviews.store'), {
+            transaction_id: reviewingTransactionId,
+            item_id: reviewingItemId,
+            client_id: authUser.id,
+            score: reviewScore,
+            comment: reviewComment,
+        }, {
+            onSuccess: () => {
+                setIsReviewModalOpen(false);
+                setLocalFlash({ success: "Review berhasil ditambahkan!" });
+                // Opsional: refresh halaman atau update data di client side
+                router.reload({ preserveUrl: true });
+            },
+            onError: (errs) => {
+                setLocalFlash({ error: Object.values(errs).join(' ') || "Gagal menambahkan review." });
+            },
+            onFinish: () => {
+                setReviewingTransactionId(null);
+                setReviewingItemId(null);
+            },
+        });
+    };
+
+
     if (selectedOrderId && selectedOrderData) {
         const order = selectedOrderData;
         const trackingSteps = getDynamicTrackingSteps(order);
         const color = getStatusColorClass(order.status);
         const canMarkAsReceived = order.status !== 'selesai' && ((order.deliveryOption === 'delivery' && ['sedang dikirim', 'selesai'].includes(order.deliveryStatus)) || (order.deliveryOption === 'pickup' && isCompletingOrder === false && (order.status === 'paid' || order.status === 'dikemas')));
+        const hasBeenReviewed = order.ratings && order.ratings.length > 0;
 
         return (
             <AppTemplate>
@@ -300,7 +368,7 @@ const PesananSaya: React.FC = () => {
                             <div><p className="text-gray-500">Kurir:</p><p className="font-semibold">{order.courier}</p></div>
                             <div><p className="text-gray-500">Tanggal Pesan:</p><p className="font-semibold">{order.createdAt}</p></div>
                             <div><p className="text-gray-500">Metode Bayar:</p><p className="font-semibold">{order.paymentMethod}</p></div>
-                            {order.pickupDeadline && <div className="col-span-full mt-2"><Info size={18} /><span>Batas pengambilan: {order.pickupDeadline}</span></div>}
+                            {order.pickupDeadline && <div className="col-span-full mt-2 flex items-center"><Info size={18} className="mr-2"/><span>Batas pengambilan: {order.pickupDeadline}</span></div>}
                         </div>
                     </div>
 
@@ -308,6 +376,16 @@ const PesananSaya: React.FC = () => {
                     <div className="bg-white rounded-xl p-5 sm:p-6 shadow-lg flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                         <button onClick={() => handlePrintReceipt(order.id)} className="w-full flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-colors"><Printer size={20} className="mr-2" /> Print Struk</button>
                         {canMarkAsReceived && <button onClick={() => handleMarkAsReceived(order.id)} disabled={isCompletingOrder} className="w-full flex-1 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-60"><CheckCircle size={20} className="mr-2" />{isCompletingOrder ? 'Memproses...' : (order.deliveryOption === 'pickup' ? 'Konfirmasi Pengambilan' : 'Tandai Diterima')}</button>}
+
+                        {/* Tombol Beri Review */}
+                        {order.status === 'selesai' && !hasBeenReviewed && order.items.length > 0 && (
+                            <button
+                                onClick={() => handleOpenReviewModal(parseInt(order.id), (rawHistoricalOrders.find(o => String(o.id) === order.id)?.details[0]?.item.id || 0))} // Mengambil ID item pertama dari detail transaksi
+                                className="w-full flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-colors"
+                            >
+                                <Star size={20} className="mr-2" /> Beri Review
+                            </button>
+                        )}
                     </div>
 
                     {/* Tracking Timeline */}
@@ -341,6 +419,29 @@ const PesananSaya: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Review Section (jika sudah ada review) */}
+                    {hasBeenReviewed && (
+                        <div className="bg-white rounded-xl p-5 sm:p-7 shadow-lg border">
+                            <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-5">Review Anda</h3>
+                            {order.ratings?.map((rating, index) => (
+                                <div key={rating.id} className="mb-4 pb-4 border-b last:border-b-0">
+                                    <div className="flex items-center mb-2">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                size={20}
+                                                className={`mr-1 ${i < rating.score ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                            />
+                                        ))}
+                                        <span className="ml-2 text-sm text-gray-600">{rating.score} / 5</span>
+                                    </div>
+                                    <p className="text-gray-700 text-sm italic">"{rating.comment}"</p>
+                                    <p className="text-xs text-gray-500 mt-1">Diberikan pada: {formatDate(rating.created_at)}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Customer & Delivery Info */}
                     <div className="bg-white rounded-xl p-5 sm:p-7 shadow-lg border">
                         <h3 className="text-lg sm:text-xl font-semibold mb-5">Info Pelanggan & Pengiriman</h3>
@@ -367,6 +468,54 @@ const PesananSaya: React.FC = () => {
 
                     <div className="text-center mt-6"><button onClick={() => setSelectedOrderId(null)} className="inline-flex items-center text-green-700 hover:text-green-800 font-medium"><ChevronLeft size={20} className="mr-2" /> Kembali ke Daftar Pesanan</button></div>
                 </div>
+
+                {/* Review Modal */}
+                {isReviewModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+                            <h2 className="text-2xl font-bold mb-4">Beri Review Anda</h2>
+                            <div className="mb-4">
+                                <label className="block text-gray-700 text-sm font-bold mb-2">Rating:</label>
+                                <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            size={30}
+                                            className={`cursor-pointer ${i < reviewScore ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                            onClick={() => setReviewScore(i + 1)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="mb-6">
+                                <label htmlFor="comment" className="block text-gray-700 text-sm font-bold mb-2">Komentar:</label>
+                                <textarea
+                                    id="comment"
+                                    rows={4}
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    placeholder="Tulis komentar Anda di sini..."
+                                    value={reviewComment}
+                                    onChange={(e) => setReviewComment(e.target.value)}
+                                ></textarea>
+                            </div>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={() => setIsReviewModalOpen(false)}
+                                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleSubmitReview}
+                                    disabled={reviewScore === 0 || !reviewComment.trim()}
+                                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    Submit Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </AppTemplate>
         );
     }
